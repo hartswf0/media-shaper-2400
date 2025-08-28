@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>𓉗 LMC 2400 — Course OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================
+       OS-LIKE THEME SYSTEM
+       Modes: light, dark, newspaper
+       ========================== */
+    :root {
+      /* Light Minimal */
+      --bg: #fcfcfc;
+      --bg-elev: #f0f0f0;
+      --text: #333;
+      --muted: #666;
+      --accent: #1a73e8; /* Google Blue */
+      --accent-weak: #e8f0fe; /* Light Google Blue */
+      --card: #ffffff;
+      --border: #ddd;
+      --shadow: 0 1px 2px rgba(0,0,0,.06), 0 6px 24px rgba(0,0,0,.06);
+      --link-rgb: 26, 115, 232; /* For shadows */
+    }
+    .theme-dark {
+      --bg: #1a1a1a;
+      --bg-elev: #2c2c2c;
+      --text: #e0e0e0;
+      --muted: #a0a0a0;
+      --accent: #8ab4f8; /* Google Blue Light */
+      --accent-weak: #2a3b5c; /* Darker blue for background */
+      --card: #202020;
+      --border: #444;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.45);
+      --link-rgb: 138, 180, 248; /* For shadows */
+    }
+    .theme-news {
+      --bg: #fdfae6; /* Creamy paper */
+      --bg-elev: #f7f0d6;
+      --text: #3e2723; /* Dark brown/sepia */
+      --muted: #6b665a;
+      --accent: #6a0505; /* Deep red ink */
+      --accent-weak: #ead9b2; /* Lighter sepia */
+      --card: #fffefd;
+      --border: #d8c39e;
+      --shadow: 0 1px 1px rgba(0,0,0,.04), 0 8px 18px rgba(0,0,0,.08);
+      --link-rgb: 106, 5, 5; /* For shadows */
+    }
+
+    /* Base Font Sizing & Global Defaults */
+    html { font-size: 100%; } /* Base for rem units, can be scaled by JS */
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Headings */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+      color: var(--text);
+      line-height: 1.3;
+      margin-top: 1.8em;
+      margin-bottom: 0.8em;
+      font-weight: 600;
+    }
+    h1 { font-size: 2.2rem; }
+    h2 { font-size: 1.8rem; }
+    h3 { font-size: 1.4rem; }
+    h4 { font-size: 1.2rem; }
+    h5 { font-size: 1.1rem; }
+
+    /* Links */
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    a:hover {
+      color: var(--link-hover-color); /* This variable is not defined in the second snippet, but theme-dark uses the accent color for hover. Let's make it explicit. */
+      text-decoration: underline;
+    }
+    .ext-link-icon {
+        vertical-align: text-top;
+        margin-left: 4px;
+        color: var(--muted);
+    }
+
+    /* Text elements */
+    p { margin-bottom: 1em; font-size: 1rem; }
+    ul, ol { margin-left: 1.5rem; margin-bottom: 1em; font-size: 1rem; }
+    li { margin-bottom: 0.5em; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+
+    /* App Layout */
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100dvh;
+    }
+
+    /* Top Bar (OS feel) */
+    .topbar {
+      position: sticky; top: 0; z-index: 5;
+      background: linear-gradient(180deg, var(--bg-elev), var(--bg));
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+      transition: background 0.3s ease, border-bottom 0.3s ease, box-shadow 0.3s ease;
+    }
+    .window-dots { display: inline-flex; gap:6px; padding:4px 6px; }
+    .dot { width:10px; height:10px; border-radius:50%; border:1px solid var(--border); }
+    .dot.red{ background:#ff5f57; border-color:#e33e2f; }
+    .dot.yellow{ background:#febc2e; border-color:#d79a15; }
+    .dot.green{ background:#28c840; border-color:#1ea232; }
+    .title {
+      font-weight: 600;
+      letter-spacing: .2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .modes {
+      display: inline-flex; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+    .modes button {
+      font: 500 0.75rem/1 'IBM Plex Mono', monospace; /* 12px */
+      letter-spacing: .2px;
+      padding: 8px 10px; border-radius: 999px; border: 0; background: transparent; color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .modes button.active { background: var(--card); color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--link-rgb), 0.3); }
+
+    /* Search */
+    .search {
+      display: flex; gap: 8px; align-items: center;
+      background: var(--bg-elev); border:1px solid var(--border); border-radius: 999px; padding: 8px 10px;
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+    .search input { flex:1; border:0; background:transparent; color:var(--text); outline:none; font: 500 1rem/1.2 'IBM Plex Sans', sans-serif; /* 16px */ }
+    .kbd { font: 500 0.75rem/1 'IBM Plex Mono', monospace; /* 12px */ color: var(--muted); background: var(--card); border:1px solid var(--border); border-radius: 6px; padding: 4px 6px; }
+
+    /* Tabs (bottom nav) */
+    .tabs {
+      position: sticky; bottom: 0; left: 0; right: 0; z-index: 5;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      transition: background 0.3s ease, border-top 0.3s ease;
+    }
+    .tabs button {
+      appearance: none; border: 0; background: transparent; padding: 10px 6px; font:600 0.75rem 'IBM Plex Mono', monospace; /* 12px */ color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tabs button.active { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+
+    /* Main Content Area */
+    main { padding: 10px 12px 80px; } /* Increased bottom padding for spacing above tabs */
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; /* Using explicit px for consistency, matches var(--radius) */
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin: 10px 0 14px;
+      transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+    }
+    .section h2 { font-size: 1.125rem; margin: 0 0 10px; /* 18px */ }
+    .muted { color: var(--muted); }
+
+    /* Cards & lists */
+    .grid { display:grid; gap: 12px; }
+    .two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    @media (max-width: 560px){ .two{ grid-template-columns: 1fr; } }
+
+    .card { background: var(--card); border:1px solid var(--border); border-radius: 14px; padding: 12px; box-shadow: var(--shadow); }
+    .card h3 { margin: 0 0 6px; font-size: 1rem; /* 16px */ }
+    .meta { font: 500 0.8125rem 'IBM Plex Mono', monospace; /* 13px */ color: var(--muted); line-height: 1.5; }
+    .meta p { margin-bottom: 0.5em; } /* Adjust for policies lists */
+
+
+    .pill { display:inline-block; padding: 4px 8px; border:1px solid var(--border); border-radius: 999px; font: 700 0.6875rem 'IBM Plex Mono', monospace; /* 11px */ color: var(--muted); }
+    .pill.accent { color: var(--accent); border-color: var(--accent-weak); background: var(--accent-weak); }
+
+    /* Details/summary (accordion) for schedule and policies */
+    details { border:1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); margin-bottom:10px; transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease; }
+    details + details { margin-top: 10px; }
+    summary { list-style: none; padding: 12px; cursor: pointer; font-weight: 600; color: var(--text); display:flex; align-items:center; gap:8px; white-space: nowrap; overflow: hidden; text-align: left; }
+    summary::-webkit-details-marker { display:none; }
+    .summary-row { display:inline-flex; gap:8px; align-items:center; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; flex: 1 1 auto; min-width: 0; }
+    /* Keep the entire summary header on one line; truncate title if needed */
+    .summary-row .summary-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-row .summary-meta { color: var(--muted); flex: 0 0 auto; white-space: nowrap; margin-left: auto; }
+    .summary-row .pill { flex: 0 0 auto; }
+    summary:hover { background-color: var(--bg-elev); }
+
+    /* Left-leaning, file-system-like nesting cues (minimal lines) */
+    .act-details { border:1px solid var(--border); box-shadow: var(--shadow); }
+    .act-details > summary { padding-left: 8px; }
+    .week-details { border:none; box-shadow:none; }
+    .week-details > summary { padding-left: 18px; }
+    .session-details { border:none; box-shadow:none; }
+    .session-details > summary { padding-left: 32px; }
+    .details-content, .card, p, .meta { text-align: left; }
+
+    /* ID chip styling */
+    .id-chip { font: 700 0.6875rem 'IBM Plex Mono', monospace; color: var(--muted); letter-spacing: 0.02em; }
+    .id-chip + .id-chip { margin-left: 6px; }
+
+    /* Custom arrow for details */
+    summary::before {
+      content: '▶';
+      display: inline-block;
+      flex: 0 0 auto;
+      transition: transform 0.2s;
+      color: var(--accent);
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+
+    /* In-page OS shell (windows + dock) */
+    .os-windows-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+    .os-window { position: absolute; min-width: 320px; min-height: 220px; width: 560px; height: 420px; background: var(--card); border:1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; pointer-events: auto; }
+    .os-titlebar { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--border); background: var(--bg-elev); cursor: move; }
+    .os-titlebar .window-dots { padding:0; }
+    .os-titlebar .title { font-weight:600; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .os-content { position:absolute; top:38px; bottom:0; left:0; right:0; display:grid; grid-template-columns: 1fr 300px; gap:0; }
+    .os-content iframe { width:100%; height:100%; border:0; background:white; }
+    .os-notes { border-left:1px solid var(--border); padding:8px; display:flex; flex-direction:column; }
+    .os-notes textarea { flex:1; width:100%; resize:none; border:1px solid var(--border); border-radius:10px; padding:8px; background: var(--bg-elev); color: var(--text); }
+    .os-window.max { left:0 !important; top:48px !important; width:100% !important; height: calc(100% - 56px) !important; border-radius: 0; }
+    .os-dock { position: fixed; left:50%; transform:translateX(-50%); bottom:10px; display:flex; gap:8px; padding:6px 10px; background: var(--bg); border:1px solid var(--border); border-radius: 999px; box-shadow: var(--shadow); pointer-events:auto; z-index: 10000; }
+    .dock-item { padding:4px 8px; border:1px solid var(--border); border-radius: 999px; background: var(--card); cursor: pointer; }
+
+    /* Small icon button */
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:2px 6px; border:1px solid var(--border); border-radius:999px; font: 700 0.6875rem 'IBM Plex Mono', monospace; color: var(--muted); background: var(--bg); cursor:pointer; }
+    .icon-btn:hover { background: var(--bg-elev); }
+
+    /* Launcher overlay */
+    .launcher-overlay { position: fixed; inset: 0; background: color-mix(in oklab, var(--bg) 60%, transparent); backdrop-filter: blur(6px); display:none; align-items: center; justify-content: center; z-index: 10001; }
+    .launcher-panel { width: min(720px, 92vw); max-height: 80vh; background: var(--card); border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); display:flex; flex-direction:column; overflow:hidden; }
+    .launcher-head { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); }
+    .launcher-head input { flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background: var(--bg); color: var(--text); }
+    .launcher-body { display:grid; grid-template-columns: 1fr 1fr; gap:0; }
+    .launcher-col { padding:12px; overflow:auto; }
+    .launcher-col h4 { margin:6px 0 10px; }
+    .launcher-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; background: var(--bg-elev); cursor:pointer; }
+    .launcher-item[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+    .badge { font: 700 0.625rem 'IBM Plex Mono', monospace; color: var(--muted); background: var(--bg); border:1px solid var(--border); padding:2px 6px; border-radius:999px; }
+
+    /* Reading side styles */
+    .reading-card { position: relative; }
+    .reading-card.side-a { box-shadow: inset 3px 0 0 #4CAF50, var(--shadow); }
+    .reading-card.side-b { box-shadow: inset 3px 0 0 #FF7043, var(--shadow); }
+    .id-chip.side-a { color: #4CAF50; }
+    .id-chip.side-b { color: #FF7043; }
+    .side-pill { display:inline-block; padding:2px 6px; border-radius:999px; font: 700 0.625rem 'IBM Plex Mono', monospace; border:1px solid var(--border); background: var(--bg); color: var(--muted); }
+    .side-pill.a { border-color:#4CAF50; color:#4CAF50; }
+    .side-pill.b { border-color:#FF7043; color:#FF7043; }
+    /* Flash highlight when navigating to a Match */
+    .reading-card.flash { outline: 2px solid #FFC107; outline-offset: 2px; }
+
+    /* Nested details styling */
+    .act-details > summary { font-size: 1.25rem; /* 20px */ }
+    .week-details > summary { font-size: 1.1rem; /* 17.6px */ }
+    .session-details > summary { font-size: 1rem; /* 16px */ }
+
+    .act-details, .week-details, .session-details { margin-bottom: 10px; border:1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); }
+    .act-details .section { margin-top:0; border:0; box-shadow:none; } /* Remove extra borders/shadow for nested sections */
+    .act-details > div, .week-details > div, .session-details > div { padding: 0 12px 12px; }
+
+    /* Guest entry in schedule */
+    .guest-line { font-style: italic; font-weight: 500; color: var(--accent); margin-top: 8px; }
+
+    /* Discussion Leader sign-up (local) */
+    .dl-table { width:100%; border-collapse: collapse; font: 500 0.875rem 'IBM Plex Sans', sans-serif; /* 14px */ }
+    .dl-table th, .dl-table td { border-bottom:1px solid var(--border); padding:8px 6px; text-align:left; }
+    .dl-table td:last-child { width: 110px; }
+    .dl-initials {
+      width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid var(--border); border-radius:8px;
+      background:var(--bg-elev); color:var(--text);
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.875rem; /* 14px */
+      transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
+    }
+    .dl-initials:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--link-rgb), 0.3); }
+
+    /* DL Initials Badge in Schedule (read-only display) */
+    .dl-initials-badge {
+      display: inline-block;
+      min-width: 2.5em; /* Ensure space for 2-3 initials */
+      padding: 0.1em 0.4em;
+      margin-left: 0.5em;
+      background-color: var(--accent-weak);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.8em; /* Smaller than surrounding text */
+      font-family: 'IBM Plex Mono', monospace;
+      text-align: center;
+      color: var(--accent);
+      vertical-align: middle;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Tiny toolbar */
+    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    .btn {
+      border:1px solid var(--border); background: var(--card); border-radius: 10px; padding: 8px 10px;
+      font: 500 0.75rem 'IBM Plex Mono', monospace; /* 12px */ color: var(--text);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { background: var(--bg-elev); }
+    .btn[aria-pressed="true"] { color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--link-rgb), 0.3); }
+
+    /* Textarea for notes */
+    textarea#notes {
+      resize: vertical;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9375rem; /* 15px */
+    }
+
+    /* Newspaper mode typographic overrides */
+    .theme-news body, .theme-news .article, .theme-news .section, .theme-news .card, .theme-news main {
+      font-family: 'Merriweather', serif;
+    }
+    .theme-news h1, .theme-news h2, .theme-news h3, .theme-news h4, .theme-news h5, .theme-news h6 {
+      font-family: 'Playfair Display', serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .theme-news p { text-align: justify; hyphens: auto; }
+    .theme-news .dropcap::first-letter { float:left; font-size: 3rem; line-height: .8; padding-right: 6px; font-family: 'Playfair Display', serif; }
+    .theme-news .meta { font-family: 'IBM Plex Mono', monospace; } /* Keep mono for meta */
+
+    /* Print styles (good for handouts) */
+    @media print {
+      .topbar, .tabs, .modes, .search, .toolbar, .dl-initials { display:none !important; }
+      main { padding: 0 !important; }
+      .section { box-shadow: none !important; break-inside: avoid !important; border:1px solid #ccc !important; }
+      .dl-initials-badge { display: inline !important; border: 0 !important; background: transparent !important; color: inherit !important; font-size: inherit !important; margin-left: 0.2em !important; padding: 0 !important; }
+      a { color: #000 !important; text-decoration: underline !important; }
+      .ext-link-icon { display: none !important; }
+      details { margin-bottom: 5px !important; }
+      details > summary::before { display: none !important; }
+      details[open] > div { display: block !important; }
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="window-dots" aria-hidden="true"></div>
+      <div class="title"><span id="launcherTrigger" title="Open Launcher" style="cursor:pointer; margin-right:6px;">𓉗</span> LMC 2400 — Course OS</div>
+      <div class="modes" role="tablist" aria-label="Theme">
+        <button class="active" data-mode="dark" role="tab" aria-selected="true" title="Dark Mode">Dark</button>
+        <button data-mode="light" role="tab" aria-selected="false" title="Light Mode Minimal">Light</button>
+        <button data-mode="news" role="tab" aria-selected="false" title="Newspaper Mode">News</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- HOME / OVERVIEW -->
+      <section class="section" data-view="home">
+        <div class="toolbar" style="justify-content: space-between; margin-bottom:12px;">
+          <div class="search" style="flex:1; max-width: 520px;">
+            <input id="q" placeholder="Search sessions, readings, assignments… ( / )" aria-label="Search" />
+            <span class="kbd">/</span>
+          </div>
+          <button class="btn" id="fontDec" title="Smaller text">A−</button>
+          <button class="btn" id="fontInc" title="Larger text">A+</button>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>Course Snapshot</h3>
+            <div class="meta">
+                <p><strong>Meeting Time:</strong> <span id="course-meeting"></span></p>
+                <p><strong>Location:</strong> <span id="course-location"></span></p>
+                <p><strong>Instructor:</strong> <span id="course-instructor"></span> · <a id="course-email" href=""></a></p>
+            </div>
+            <div id="grade-breakdown-pills" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+              <!-- Grade pills dynamically inserted here -->
+            </div>
+          </article>
+
+          <article class="card article">
+            <h3>What This Is</h3>
+            <p class="dropcap">Media shape reality. As media become computational, they generate futures. This site serves as the course control panel: access sessions, readings, and deadlines; record discussion‑leader sign‑ups; and maintain personal notes.</p>
+          </article>
+        </div>
+
+        <div class="section" style="margin-top:20px;">
+            <h2 id="overview-title">Shaping Reality Through Media</h2>
+            <div id="course-overview-content"></div>
+
+            <h3 id="ethos-title">Course Ethos — You Are Here to Contribute to Culture</h3>
+            <div id="course-ethos-content"></div>
+
+            <h3 id="how-it-works-title">How the Course Works</h3>
+            <div id="how-it-works-content"></div>
+        </div>
+
+        <div class="section">
+            <h2>The Course Journey: 6 Acts of Discovery</h2>
+            <p class="muted">Meaning is a provisional pattern, [stabilizing] through repeated &lt;practice&gt;:<br>
+            &lt;text&gt; \-\> &lt;code&gt; \-\> &lt;interface&gt; \-\> &lt;platform&gt; \-\> &lt;public&gt; \-\> &lt;culture&gt; \-\> &lt;human&gt; \-\> &lt;text&gt;<br>
+            <em>Meaning is never fixed; it's always [deferred], [re-staged], and [remediated] by media we both produce and are produced by.</em></p>
+            <ul id="course-journey-list"></ul>
+        </div>
+
+        <div class="section">
+            <h2>Guiding Frameworks: Arcs & Critical Questions</h2>
+            <ul id="frameworks-list"></ul>
+        </div>
+
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="section" data-view="schedule">
+        <h2>Acts & Sessions</h2>
+        <div class="toolbar" id="schedule-view-buttons" style="margin-bottom:12px;">
+            <button class="btn" data-view="act" aria-pressed="true">View by Act</button>
+            <button class="btn" data-view="week" aria-pressed="false">View by Week</button>
+            <button class="btn" data-view="session" aria-pressed="false">View All Sessions</button>
+        </div>
+        <div id="schedule"></div>
+      </section>
+
+      <!-- ASSIGNMENTS -->
+      <section class="section" data-view="assignments">
+        <h2>Assignments & Deadlines</h2>
+        <div id="assignments-content" class="grid two"></div>
+
+        <div class="section" style="margin-top:20px;">
+            <h2>Policies & Resources</h2>
+            <div id="policies-content"></div>
+        </div>
+      </section>
+
+      <!-- DL SIGNUP (LOCAL) -->
+      <section class="section" data-view="dl">
+        <h2>Discussion Leader Sign‑up (Local)</h2>
+        <p class="muted">Add your initials to claim a slot. This information is saved in your browser only.</p>
+        <table class="dl-table" id="dlTable" aria-label="Discussion Leader sign-up table">
+          <thead>
+            <tr><th>Date</th><th>Reading</th><th>Slot</th><th>Your Initials</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- PERSONAL NOTES -->
+      <section class="section" data-view="notes">
+        <h2>Quick Notes</h2>
+        <p class="muted">Jot ideas, project sketches, or questions. This content is stored only in your browser.</p>
+        <textarea id="notes" style="width:100%; min-height: 30dvh; box-sizing:border-box; padding:12px; border:1px solid var(--border); border-radius: 12px; background: var(--bg-elev); color: var(--text);"></textarea>
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button class="btn" id="exportNotes">Export .txt</button>
+          <button class="btn" id="clearNotes">Clear</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Launcher overlay -->
+    <div id="launcher" class="launcher-overlay" aria-hidden="true">
+      <div class="launcher-panel" role="dialog" aria-label="Launcher">
+        <div class="launcher-head">
+          <input id="launcherSearch" type="text" placeholder="Search sessions, readings, commands (Cmd+K)" />
+          <button class="icon-btn" id="launcherCarrot" title=" ">🥕</button>
+          <button class="icon-btn" id="launcherClose" title="Close">✕</button>
+        </div>
+        <div class="launcher-body">
+          <div class="launcher-col">
+            <h4>Apps</h4>
+            <div class="launcher-item" data-launch="syllabus">Syllabus <span class="badge">ready</span></div>
+            <div class="launcher-item" data-launch="reader">Reader <span class="badge">ready</span></div>
+            <div class="launcher-item" data-launch="notes" aria-disabled="true" title="Coming soon">Notes <span class="badge">soon</span></div>
+            <div class="launcher-item" data-launch="timeline" aria-disabled="true" title="Coming soon">Timeline <span class="badge">soon</span></div>
+            <h4 id="matchesHeader" style="display:none;">Matches</h4>
+            <div id="launcherMatches"></div>
+          </div>
+          <div class="launcher-col">
+            <h4>Recents</h4>
+            <div id="launcherRecents" class="meta">Open readings to see them here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="Primary Navigation">
+      <button class="active" data-tab="home" role="tab" aria-selected="true">Home</button>
+      <button data-tab="schedule" role="tab" aria-selected="false">Schedule</button>
+      <button data-tab="assignments" role="tab" aria-selected="false">Work</button>
+      <button data-tab="dl" role="tab" aria-selected="false">DL</button>
+      <button data-tab="notes" role="tab" aria-selected="false">Notes</button>
+    </nav>
+  </div>
+
+  <script>
+    // Helper function to safely insert HTML (prevents XSS if data were user-generated)
+    function cleanHtml(htmlString) {
+      const div = document.createElement('div');
+      div.innerHTML = htmlString;
+      return div.innerHTML;
+    }
+
+    // ==========================
+    // DATA (seeded from syllabus excerpts)
+    // ==========================
+    const DATA = {
+      course: {
+        title: "LMC 2400 | Fall 2025",
+        meeting: "Tue/Thu · 2:00–3:15 PM ET",
+        location: "Room 370 / Canvas",
+        instructor: "Watson Hartsoe",
+        email: "whartsoe3@gatech.edu"
+      },
+      overview: `Media shapes reality—but who shapes media? Humans are the first medium; every story, symbol, and system shapes who we are. This course examines the nature of media, its co-evolution with cultural systems, its role in power, and its influence on our future. From ancient myths to AI-generated worlds, we will explore how media define humanity and expand (or limit) what is possible. Media theory is not observation; it is intervention. You are expected to engage fully with readings, discussions, and projects as live parts of a shared system; contribute to culture by creating work that did not exist before; think critically and act deliberately by testing frameworks, questioning assumptions, and tracking consequences; and work the loop—readings, assignments, rubrics, and mood tracking feeding and depending on each other. By the end of this course, you will be able to analyze media as both a tool for thought and a cultural system; trace its co-evolution with consciousness, power, and possibility; apply theoretical frameworks to current and emerging media forms; and create media artifacts that actively intervene in cultural narratives.`,
+      ethos: `You are not here to passively consume course content. Your work is both academic credit and a cultural act. Through active engagement, you generate <em>symbolic capital</em>—ideas, artifacts, and connections that endure beyond the semester.`,
+      howItWorks: [
+        "Readings introduce concepts and perspectives.",
+        "Assignments transform those concepts into original work.",
+        "Rubrics clarify expectations and evaluate outcomes.",
+        "Mood Tracking captures our collective state and informs adjustments."
+      ],
+      courseJourney: [
+        { act: "Act I: Origins — Humans Were Always Media", weeks: "Wks 2-4", stakes: "Identity.", coreIdea: "We didn’t get media — we became them. Media made us human." },
+        { act: "Act II: Seeing Like a Medium", weeks: "Wks 5-7", stakes: "Reality, belonging, perception.", coreIdea: "Every apparatus tells us what is real. Cameras, broadcasts, feeds: each claims objectivity, each encodes bias. Every frame is already a program." },
+        { act: "Act III: Sensing and Ritualizing", weeks: "Wk 8", stakes: "Mind, attention, knowledge.", coreIdea: "Media retrain our bodies — our listening, our silence, our rituals of belonging. Attention is not natural; it’s engineered." },
+        { act: "Act IV: Computation and Futurity", weeks: "Wks 9-11", stakes: "Your future.", coreIdea: "Once media compute, they stop reflecting and start generating. Simulations, games, design fictions: the future is no longer predicted — it is prototyped." },
+        { act: "Act V: Haunted Presents", weeks: "Wks 12-14", stakes: "Time, memory, kinship.", coreIdea: "Reproduction didn’t kill aura, it moved it. Media fold time, carrying ghosts forward and canceling futures before they arrive. The past is never past; the future is never free." },
+        { act: "Act VI: Exhibition / Accountability", weeks: "Wk 15", stakes: "Responsibility.", coreIdea: "Meaning is provisional, staged in publics. To exhibit is to take responsibility for a world." }
+      ],
+      frameworks: [
+        { title: "Nature of Media", question: "How do <em>forms</em> & <em>systems</em> of media reshape perception, communication, & 'reality'?" },
+        { title: "Media, Power, & Construction", question: "How do media encode, transmit, & contest power, ideology, & identity?" },
+        { title: "Temporality, Memory, & Future-Making", question: "How do media transform time/memory, & what ethical responsibilities in <em>designing</em> futures?" },
+        { title: "Human/Machine Co-Evolution", question: "As humans & AI co-evolve, how are intelligence, creativity, identity, & 'kinship' redefined?" }
+      ],
+      policies: {
+        ai: {
+          summary: "AI Usage: Pragmatism Protocol",
+          content: `
+            <p><strong>Core Principle:</strong> AI is a <strong>required tool for inquiry</strong>, not an invisible ghostwriter. This protocol fosters <strong>transparent, iterative, and critical engagement</strong> with AI as both an interface and a cultural form, akin to a lab notebook for experimentation. It rewards learning from both successes and documented failures, cultivating judgment over mere output.</p>
+            <p><strong>Underlying Rubric for ALL Written Assignments (RR, SP1, SP2, FP Memo):</strong> The grade for <em>every written assignment</em> incorporates:</p>
+            <ul>
+              <li><strong>Process Integrity (50% of assignment grade):</strong> Quality, completeness, and <strong>machine-readability</strong> of your Process Log (documenting setup, BASE, ACE, CRASHOUT, verification). <strong>Failure to submit a compliant/compiling log will result in 0% for this component.</strong></li>
+              <li><strong>Argument Strength (30% of assignment grade):</strong> Quality of core argument, content, and final output, as per the assignment's specific rubric.</li>
+              <li><strong>AI Application & Reflection (20% of assignment grade):</strong> Documented AI successes (ACE) and failures (CRASHOUT), including analysis of <em>why</em> an intervention worked or failed, diagnosis, and proposed mitigations. This showcases critical thinking about AI's capabilities and limitations.</li>
+            </ul>
+            <p><strong>Merit:</strong> Up to +10 bonus for exceptional engagement (e.g., novel prompt techniques, verifiable replications).</p>
+            <p><strong>Key Deliverables within Log:</strong> For each assignment, you must perform and log: BASE (control run), ACE (best one-shot optimized run), and CRASHOUT (documented, reproducible failure + mitigation).</p>
+            <p><strong>Verification:</strong> All factual claims, citations, page numbers, and DOIs <strong>must be human-verified</strong> with concrete evidence. Do not assert unverifiable information.</p>
+            <p><strong>Prohibited Conduct:</strong> Undisclosed AI use, fabrication/falsification of sources/content, and uploading private/restricted data. Unlogged AI use will result in 0% for the Process Integrity component of that assignment.</p>
+            <p><em>(Full Pragmatism Protocol, including detailed logging schema and rationale, is available on Canvas and <a href="https://hartswf0.github.io/os-dope-faa/#tab=protocol" target="_blank" rel="noopener noreferrer">https://hartswf0.github.io/os-dope-faa/#tab=protocol</a> . For institutional policies and other resources consult <strong>GT OIT AI Guidance:</strong> <a href="https://oit.gatech.edu/ai/guidance" target="_blank" rel="noopener noreferrer">https://oit.gatech.edu/ai/guidance</a>)</em></p>
+          `
+        },
+        academicIntegrity: {
+          summary: "Academic Integrity & Honor Code",
+          content: `
+            <p>This course demands the highest academic integrity. All work must be original, properly cited, and adhere to the <strong>Georgia Tech Honor Code</strong>. Plagiarism (deliberate use of unacknowledged outside sources) and undisclosed AI use are violations. Penalties include zero on assignment, course failure, Dean's report.</p>
+            <p><em>(Full GT Honor Code: <a href="https://policylibrary.gatech.edu/student-life/academic-honor-code" target="_blank" rel="noopener noreferrer">https://policylibrary.gatech.edu/student-life/academic-honor-code</a>)</em></p>
+          `
+        },
+        engagement: {
+          summary: "Classroom Engagement & Attendance",
+          content: `
+            <p>This is a 95% in-person, interactive course. Active attendance and respectful participation are crucial for your learning and classmates' success. All members are expected to treat peers with kindness and respect, engaging constructively with diverse views. Inappropriate/abusive behavior will be reported. If uncomfortable, contact instructor immediately.</p>
+          `
+        },
+        lateWork: {
+          summary: "Late Work",
+          content: `
+            <ul>
+              <li><strong>RRs:</strong> 10% deduction/day. Due <strong>Thursday @ midnight</strong> for full credit. (80% completion of RRs earns full RR grade).</li>
+              <li><strong>Papers/Projects:</strong> 10% deduction/day (max 3 days). &gt;3 days = no credit without <em>prior written, documented extension</em> (24hrs in advance). Tech issues not typically excused. <em>Communicate ahead of time.</em></li>
+            </ul>
+          `
+        },
+        accessibility: {
+          summary: "Accessibility & Accommodations",
+          content: `
+            <p>For health or accessibility concerns (learning, mental health), register with <strong>Georgia Tech Disability Services</strong> (phone: 404.894.2563, email: <a href="mailto:disability.services@gatech.edu">disability.services@gatech.edu</a>). Email instructor with your official accommodation letter for support planning.</p>
+            <p><em>(Disability Services Website: <a href="https://disabilityservices.gatech.edu" target="_blank" rel="noopener noreferrer">https://disabilityservices.gatech.edu</a>)</em></p>
+          `
+        },
+        techUsage: {
+          summary: "Technology Usage",
+          content: `
+            <p>Devices are for coursework. Distracting use (e.g., social media) may result in policy changes. No recording without instructor's written permission.</p>
+          `
+        },
+        communication: {
+          summary: "Communication",
+          content: `
+            <p>Canvas/Email (<a href="mailto:whartsoe3@gatech.edu">whartsoe3@gatech.edu</a>). Response 24-48 hrs (weekdays). <strong>Office Hours:</strong> Thursdays 13:00-15:00 ET, or by request.</p>
+          `
+        },
+        universityResources: {
+          summary: "University Resources",
+          content: `
+            <ul>
+              <li><strong>Writing &amp; Communication Center:</strong> Free consultations (Clough 447). <a href="https://writing.gatech.edu" target="_blank" rel="noopener noreferrer">https://writing.gatech.edu</a></li>
+              <li><strong>Georgia Tech Library:</strong> Research, citation, sources. <a href="https://library.gatech.edu" target="_blank" rel="noopener noreferrer">https://library.gatech.edu</a></li>
+              <li><strong>Center for Mental Health Care &amp; Resources (Counseling Center):</strong> Confidential mental health support. <a href="https://counseling.gatech.edu" target="_blank" rel="noopener noreferrer">https://counseling.gatech.edu</a></li>
+              <li><strong>Bill Moore Student Success Center:</strong> Academic planning/strategies. <a href="https://success.gatech.edu" target="_blank" rel="noopener noreferrer">https://success.gatech.edu</a></li>
+              <li><strong>Writing Resources:</strong> Purdue OWL (MLA), MLA Style Center, UNC Writing Center Tips. <em>(Full resource details/additional links on Canvas.)</em></li>
+            </ul>
+          `
+        }
+      },
+      detailedAssignments: [
+        { title: "Weekly Reading Responses", percentage: "25%", description: "200-300w. Due **Thursday @ midnight**. 80% completion = 100% credit." },
+        { title: "Discussion Leader (DL)", percentage: "20%", description: "One session/student, 20-25 min in class + 500w write-up. **DL Changes:** Require 1-week advance notice (documented emergencies exempt)." },
+        { title: "Short Paper 1: Media-History Case Study", percentage: "15%", description: "750–1000w. Due Wk 6 (**Tue, 09/30 @ 11:59 PM**)." },
+        { title: "Short Paper 2: Spacing/Presence Analysis", percentage: "15%", description: "750–1000w. Due Wk 10 (**Thu, 10/23 @ 11:59 PM**)." },
+        { title: "Final Project: Sankofa Futures", percentage: "25%", description: "Speculative artifact + analytical memo (1000-1500w) + presentation. Due Wk 16 (**Tue, 12/02 @ 11:59 PM**)." }
+      ],
+      sessions: [
+        {
+          act: 'Act I — Origins & Human-Media Co-Evolution', range: 'Weeks 2-4', stakes: 'Your identity.', core: 'Every story, symbol, system doesn\'t just reflect — it *makes* us. Media are human "program updates."', task: 'As a primal storyteller, bind people with words that outlive you, making a world. You don’t just use media — you are media. Every story, meme, and TikTok is a ritual shaping what being human means.',
+          weeks: [
+            {
+              num: 2, title: 'Origins — When Humans Became Media', focus: 'Nature of Media; Human/Machine Co-Evolution.', theme: 'Humans Were Always Media.', dueDate: 'Thu, 08/28 @ midnight', sessions: [
+                {
+                  num: 3, date: 'Tue, 08/26', title: 'When People Became Media: From Gatekeepers to Viral Editors', core: 'Networked publics make each person a node, unsettling authority.', question: 'How do media technologies alter *who can author* and *what can be thought*?', prompt: 'Compare Miroshnichenko’s “publicators” with Victor’s “media for thinking the unthinkable.”', readings: [
+                    { id: 'ACT1.W2.S3.A.1', label: 'Miroshnichenko, Human as Media: Emancipation of Authorship', link: 'https://human-as-media.com/human-as-media/' },
+                    { id: 'ACT1.W2.S3.B.1', label: 'Victor, Media for Thinking the Unthinkable', link: 'https://worrydream.com/MediaForThinkingTheUnthinkable/' }
+                  ]
+                },
+                {
+                  num: 4, date: 'Thu, 08/28', title: 'The Way of the Vibe Coder: Culture, Media, and the Making of “Man”', core: '"What is man?" is "Through what code/medium are we written?"', question: 'Culture is human software, re-coded by new media, making the "message" the architect of reality.', prompt: 'Using McLuhan/Geertz, discuss how a medium reshapes "man." How does Rick Rubin’s “Way of Code” illuminate this?', readings: [
+                    { id: 'ACT1.W2.S4.A.1', label: 'Geertz, Concept of Culture on Concept of Man', link: 'https://depts.washington.edu/uwmused/530/Readings_files/Geertz-culture-man.pdf' },
+                    { id: 'ACT1.W2.S4.A.2', label: 'McLuhan, Medium Is the Message (excerpt)', link: 'https://web.mit.edu/allanmc/www/mcluhan.mediummessage.pdf' },
+                    { id: 'ACT1.W2.S4.B.1', label: 'Rubin, The Way of Code', link: 'https://www.thewayofcode.com/' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 3, title: 'Semiotics, Language, and World-Making', focus: 'Nature of Media; Human/Machine Co-Evolution.', theme: 'Myth as Operating System.', dueDate: 'Thu, 09/04 @ midnight', sessions: [
+                {
+                  num: 5, date: 'Tue, 09/02', title: 'Myth Engines: Why News and Wrestling Tell the Same Story', core: 'Myth is the operating system of modern media.', question: 'Language is generative; it actively brings worlds into being.', prompt: 'Barthes (wrestling) + Ptah (words) + AI "world models": how does language make worlds?', readings: [
+                    { id: 'ACT1.W3.S5.A.1', label: 'Barthes, How to Read Signs in News', link: 'https://www.youtube.com/watch?v=FeF6O6E9RQ8' },
+                    { id: 'ACT1.W3.S5.A.2', label: 'Barthes, World of Wrestling', link: 'https://web.mit.edu/21l.432/www/readings/Barthes_WorldOfWrestling.pdf' },
+                    { id: 'ACT1.W3.S5.B.1', label: 'LLMs, From Word Models to World Models', link: 'https://arxiv.org/abs/2306.12672' },
+                    { id: 'ACT1.W3.S5.B.2', label: 'Brier, Ptah Creating World with Words', link: 'https://www.youtube.com/watch?v=FZCANtv1h9c' },
+                    { id: 'ACT1.W3.S5.B.3', label: 'Memphite Theology, Shabaka Stone & Intro', link: 'https://omnika.org/texts/328' }
+                  ]
+                },
+                {
+                  num: 6, date: 'Thu, 09/04', title: 'The Medium as Operator: From Ritual Belonging to Technical Systems', core: 'Media don’t just transmit messages; they script social life.', question: 'Are media cultural rituals (Carey) or deterministic systems (Kittler)? How does this inform AI text–image?', prompt: 'Compare Carey’s “ritual view” with Kittler’s materialist view. Apply to “operative ekphrasis” in AI.', readings: [
+                    { id: 'ACT1.W3.S6.A.1', label: 'Carey, Cultural Approach to Communication', link: 'https://web.mit.edu/21l.432/www/readings/Carey_CulturalApproachCommunication.pdf' },
+                    { id: 'ACT1.W3.S6.A.2', label: 'Kittler, Gramophone, Film, Typewriter', link: 'https://monoskop.org/images/7/73/Kittler_Friedrich_Gramophone_Film_Typewriter.pdf' },
+                    { id: 'ACT1.W3.S6.B.1', label: 'Keats, Ode on a Grecian Urn', link: 'https://www.poetryfoundation.org/poems/44477/ode-on-a-grecian-urn' },
+                    { id: 'ACT1.W3.S6.B.2', label: 'Bajohr, Operative Ekphrasis', link: 'https://doi.org/10.1080/02666286.2024.2330335' },
+                    { id: 'ACT1.W3.S6.B.3', label: 'Wild, Say What You See', link: 'https://artsandculture.google.com/experiment/say-what-you-see/jwG3m7wQShZngw' },
+                    { id: 'ACT1.W3.S6.B.4', label: 'Apollinaire, Poet Who Painted with Words', link: 'https://www.youtube.com/watch?v=YJ0x1YOuMwQ' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 4, title: 'Digital Media Logics: Transparency and Layers', focus: 'Nature of Media.', theme: 'Immediacy, Hypermediacy, and Remediation.', dueDate: 'Thu, 09/11 @ midnight', sessions: [
+                {
+                  num: 7, date: 'Tue, 09/09', title: 'Windows & Mirrors: The Special Effect of Immediacy', core: 'All “immediacy” is a special effect, remediating what came before.', question: 'New media oscillate between transparent immediacy and hypermediated self-awareness.', prompt: 'Analyze a digital medium (social media, game UI) for immediacy, hypermediacy, remediation (Bolter & Grusin), and closure (McCloud).', readings: [
+                    { id: 'ACT1.W4.S7.A.1', label: 'Bolter & Grusin, Immediacy, Hypermediacy, and Remediation', link: 'http://mitp-content-server.mit.edu:18180/books/content/sectbyfn?collid=books_pres_0&id=5881&fn=9780262522793_sch_0001.pdf' },
+                    { id: 'ACT1.W4.S7.B.1', label: 'McCloud, Understanding Comics (ch. 1–3)', link: 'https://owenroberts.github.io/commlab/readings/understanding-comics-excerpt.pdf' }
+                  ], guests: ['Jay Bolter (Q&A)']
+                },
+                {
+                  num: 8, date: 'Thu, 09/11', title: 'Aura After Copies: The Angel of History Meets the Algorithm', core: 'Reproduction doesn’t kill aura; it relocates it, shaping memory and progress.', question: 'Algorithmic reproduction demands new authenticity, memory, and progress.', prompt: 'Using Benjamin (“Work of Art,” “Thesis IX”), discuss how mechanical to algorithmic reproduction changes aura/historical consciousness.', readings: [
+                    { id: 'ACT1.W4.S8.A.1', label: 'Benjamin, Work of Art in Age of Mech. Repro.', link: 'https://web.mit.edu/allanmc/www/benjamin.pdf' },
+                    { id: 'ACT1.W4.S8.A.2', label: 'Benjamin, Thesis IX: Angelus Novus', link: 'https://files.libcom.org/files/Theses.pdf' },
+                    { id: 'ACT1.W4.S8.B.1', label: 'Video Essay, Angel of History', link: 'https://www.youtube.com/watch?v=7iYszscVduI' },
+                    { id: 'ACT1.W4.S8.B.2', label: 'Stanley, "Work of Art in Age of Algo. (Re)production"', link: '#' }
+                  ], guests: ['Ben Brewer (Memory, media, temporality)']
+                }
+              ]
+            }
+          ]
+        },
+        {
+          act: 'Act II — Seeing Like a Medium', range: 'Weeks 5–7', stakes: 'Reality, belonging, perception.', core: 'Every medium tells us what is real. Cameras, broadcasts, feeds — each claims objectivity, each encodes bias. Media define what is seen, heard, and valued, shaping both cultural consensus and individual experience.', task: 'Unpack the codes embedded in images, popular culture, and soundscapes, revealing how they construct our shared reality.',
+          weeks: [
+            {
+              num: 5, title: 'The Photographic Image: Reality, Illusion, and Code', focus: 'Nature of Media; Media, Power, & Social Construction.', theme: 'Photography & the Frame.', dueDate: 'Thu, 09/18 @ 11:59 PM', sessions: [
+                {
+                  num: 9, date: 'Tue, 09/16', title: 'Caves of Light: How Photography Rewrote Reality', core: 'Photography frees us from reality by convincing us we’ve captured it.', question: 'All media create illusions of presence; "IRL fetish" is paradoxically born from seeking the unmediated.', prompt: 'Compare Bazin’s “ontology” with Sontag’s framing. How does Jurgenson’s “IRL fetish” expand or challenge these?', readings: [
+                    { id: 'ACT2.W5.S9.A.1', label: 'Sontag, In Plato’s Cave', link: 'https://openlab.citytech.cuny.edu/chengphotoarth1100f2019/files/2018/02/Susan-Sontag-In-Platos-Cave.pdf' },
+                    { id: 'ACT2.W5.S9.A.2', label: 'Bazin, Ontology of Photographic Image', link: 'https://badspaceusao.wordpress.com/wp-content/uploads/2018/12/Bazin-Ontology-Photographic-Image.pdf' }
+                  ]
+                },
+                {
+                  num: 10, date: 'Thu, 09/18', title: 'To Shoot Is to Program: Flusser’s Camera Rules', core: 'To take a photograph is to follow a program.', question: 'Photos are outputs of a technological program, making even “IRL” experience mediated/coded.', prompt: 'Using Flusser’s “coded system,” analyze how a photographic practice (filters, surveillance) distorts perception. Connect to Jurgenson’s online/offline.', readings: [
+                    { id: 'ACT2.W5.S10.A.1', label: 'Flusser, Towards a Philosophy of Photography', link: 'http://imagineallthepeople.info/Flusser_TowardsAPhilosophyofPhotography.pdf' },
+                    { id: 'ACT2.W5.S10.B.1', label: 'Jurgenson, The IRL Fetish', link: 'https://thenewinquiry.com/the-irl-fetish/' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 6, title: 'Media, Power, and the Politics of Representation', focus: 'Media, Power, & Social Construction; Human/Machine Co-Evolution.', theme: 'Encoding Bias, Decoding Ideology.', dueDate: 'Thu, 09/25 @ 11:59 PM', additionalDue: 'Short Paper 1: Media-History Case Study — Tue, 09/30 @ 11:59 PM', sessions: [
+                {
+                  num: 11, date: 'Tue, 09/23', title: 'Encoding, Decoding, and the Politics of the Popular', core: 'Encoding aims at control, but decoding organizes culture.', question: 'Media perpetuate or challenge ideologies via their "grammar" of representation.', prompt: 'Using Hall’s encoding/decoding, analyze algorithmic bias (Buolamwini). What challenges for oppositional readings when the encoder is an algorithm?', readings: [
+                    { id: 'ACT2.W6.S11.A.1', label: 'Hall, Encoding/Decoding in TV Discourse', link: 'https://spstudentenhancement.files.com/2015/03/stuart-hall-1980.pdf' },
+                    { id: 'ACT2.W6.S11.A.2', label: 'Hall, Race, Gender, Class in Media', link: 'https://www.youtube.com/watch?v=FWP_N_FoW-I' },
+                    { id: 'ACT2.W6.S11.B.1', label: 'Buolamwini, AI, Ain’t I a Woman?', link: 'https://www.youtube.com/watch?v=QxuyfWoVV98' },
+                    { id: 'ACT2.W6.S11.B.2', label: 'Film, Coded Bias', link: 'https://www.netflix.com/title/81328723' },
+                    { id: 'ACT2.W6.S11.B.3', label: 'Buolamwini & Gebru, Gender Shades', link: 'https://proceedings.mlr.press/v81/buolamwini18a/buolamwini18a.pdf' }
+                  ]
+                },
+                {
+                  num: 12, date: 'Thu, 09/25', title: 'The Popular as Battleground: Whose Stories Stick?', core: 'The popular is what power cannot stabilize, not just what people like.', question: 'Popular culture is struggle (Hall); media bias (Innis) shapes enduring stories. How to design media for the deep future?', prompt: 'Analyze a contemporary “popular” phenomenon via Hall + Innis. Consider 10,000-year endurance.', readings: [
+                    { id: 'ACT2.W6.S12.A.1', label: 'Hall, Notes on Deconstructing “the Popular”', link: 'https://la.utexas.edu/users/hcleaver/357k/HallPopularCulture.pdf' },
+                    { id: 'ACT2.W6.S12.A.2', label: 'Innis, The Bias of Communication', link: 'https://archive.org/details/biasofcommunicat0000inni' },
+                    { id: 'ACT2.W6.S12.B.1', label: 'Gaiman, How Stories Last', link: 'https://www.youtube.com/watch?v=Xn2n7N7Q2vw' },
+                    { id: 'ACT2.W6.S12.B.2', label: '99% Invisible, Ten Thousand Years', link: 'https://99percentinvisible.org/episode/ten-thousand-years/' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 7, title: 'The Sensory World: Soundscapes, Orality, and Perception', focus: 'Nature of Media; Human/Machine Co-Evolution.', theme: 'Listening as Interface.', dueDate: 'Thu, 10/02 @ 11:59 PM', sessions: [
+                {
+                  num: 13, date: 'Tue, 09/30', title: 'Tongues Before Text: Orality, Memory, and the Sounding World', core: 'Literacy is a cognitive plugin replacing memory with inscription.', question: 'Consciousness is shaped by media (Ong), soundscapes (Schafer), and now artificial sonic intelligence.', prompt: 'Compare Ong’s “primary orality” and Schafer’s “soundscape.” How do AI sounds reshape listening/world experience?', readings: [
+                    { id: 'ACT2.W7.S13.A.1', label: 'Ong, Orality and Literacy (ch. 1)', link: 'https://monoskop.org/images/d/db/Ong_Walter_J_Orality_and_Literacy_2nd_ed.pdf' },
+                    { id: 'ACT2.W7.S13.A.2', label: 'Schafer, The Soundscape', link: 'https://monoskop.org/images/d/d4/Schafer_R_Murray_The_Soundscape_Our_Sonic_Environment_and_the_Tuning_of_the_World_1994.pdf' },
+                    { id: 'ACT2.W7.S13.B.1', label: '99% Invisible, Ep 15: Sound of Artificial World', link: 'https://99percentinvisible.org/episode/episode-15-the-sound-of-the-artificial-world/' },
+                    { id: 'ACT2.W7.S13.B.2', label: 'Herndon, PROTO', link: 'https://unfoldingai.mit.edu/panelist/holly-herndon/' },
+                    { id: 'ACT2.W7.S13.B.3', label: 'Haskell, When Earth Started to Sing', link: 'https://emergencemagazine.org/audio-story/when-the-earth-started-to-sing/' }
+                  ]
+                },
+                {
+                  num: 14, date: 'Thu, 10/02', title: 'Silence Has Rules: Sound, Absence, and the Shape of Attention', core: 'Silence is a medium with laws structuring how we listen/belong.', question: 'How do different media environments choreograph attention through sound and silence?', prompt: 'Analyze a media form/space (podcast, silent film) for how it uses sound/silence to guide perception/attention/connection (Cage, Sterne).', readings: [
+                    { id: 'ACT2.W7.S14.A.1', label: 'Cage, Silence', link: 'https://monoskop.org/images/b/b5/Cage_John_Silence_Lectures_and_Writings.pdf' },
+                    { id: 'ACT2.W7.S14.A.2', label: 'Sterne, The Audible Past', link: 'https://lab2.surwww.com/material/Jonathan%20Sterne-The%20Audible%20Past_%20Cultural%20Origins%20of%20Sound%20Reproduction.pdf' },
+                    { id: 'ACT2.W7.S14.B.1', label: 'Sapir/Whorf, Status of Linguistic Relativity', link: 'https://www.jstor.org/stable/pdf/679389.pdf' }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          act: 'Act III — Sensing and Ritualizing', range: 'Week 8', stakes: 'Mind, attention, and the architecture of knowledge.', core: 'Media retrain our bodies and minds — engineering how we listen, when we stay silent, and the rituals that bind belonging. Attention isn’t natural; it’s designed.', task: 'Uncover the hidden curricula of digital platforms, showing how their logics shape our cognition, focus, and collective patterns of thought.',
+          weeks: [
+            {
+              num: 8, title: 'Expanding Cognition: From Memex to Attention Economy', focus: 'Nature of Media; Media, Power, & Social Construction; Human/Machine Co-Evolution.', theme: 'Media as Cognitive Extension.', dueDate: 'Thu, 10/09 @ 11:59 PM', sessions: [
+                {
+                  num: 15, date: 'Tue, 10/07', title: 'Trails Before Links: Bush, Hypertext, and the Technotext', core: 'The memex was about association as interface.', question: 'How do Bush’s “memex” and Nelson’s hypertext vision reshape human intelligence?', prompt: 'Using Bush/Nelson, analyze a digital platform (Wikipedia, Notion) as an “extension of mind.” How does its design influence thought/memory?', readings: [
+                    { id: 'ACT3.W8.S15.A.1', label: 'Bush, As We May Think', link: 'https://www.atlantic.com/magazine/archive/1945/07/as-we-may-think/303881/' },
+                    { id: 'ACT3.W8.S15.A.2', label: 'Nelson, Literary Machines (Ch. 2)', link: 'https://cs.brown.edu/people/nmeyrowi/LiteraryMachinesChapter2.pdf' },
+                    { id: 'ACT3.W8.S15.B.1', label: 'Herzog, Lo and Behold', link: 'https://www.youtube.com/watch?v=Zc1tZ8JsZvg' }
+                  ]
+                },
+                {
+                  num: 16, date: 'Thu, 10/09', title: 'Custodians & Feeds: The Hidden Curricula of Platforms', core: 'Moderation is the hidden curriculum of the internet.', question: 'How do algorithmic feeds and moderation train us in valid speech, creativity, and belonging?', prompt: 'Using Gillespie/Conte, analyze a platform’s moderation/discovery. Connect to attention economy (Scanland) and individualism (Curtis).', readings: [
+                    { id: 'ACT3.W8.S16.A.1', label: 'Gillespie, Custodians of the Internet', link: 'https://www.researchgate.net/profile/Andre-Brock/publication/327186182_Custodians_of_the_internet_Platforms_content_moderation_and_the_hidden_decisions_that_shape_social_media/links/5dfcffa3a6fdcc2837318e10/Custodians-of-the-Internet-Platforms-Content-Moderation-and-the-Hidden-Decisions-That-Shape-Social-Media.pdf' },
+                    { id: 'ACT3.W8.S16.A.2', label: 'Conte, Death of the Follower', link: 'https://www.youtube.com/watch?v=hwn6-8XpIuE' },
+                    { id: 'ACT3.W8.S16.B.1', label: 'Curtis, Can’t Get You Out of My Head (Ep 6)', link: 'https://www.youtube.com/watch?v=X2qJ7eTirHI' },
+                    { id: 'ACT3.W8.S16.B.2', label: 'Ezra Klein Show, How Attention Economy Devours Gen Z', link: 'https://www.youtube.com/watch?v=cZO1B4fZlOw' }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          act: 'Act IV — Computation and Futurity', range: 'Weeks 9-11', stakes: 'Your future.', core: 'If code generates worlds, who writes the rules we’ll live by?', task: 'As an algorithm-age designer, build rules that make futures feel playable.',
+          weeks: [
+            {
+              num: 9, title: 'Computation and Futurity (cont.)', focus: 'Media as Play & Persuasion: Cybernetics, Games, and the Brain.', theme: '', dueDate: 'Thu, 10/16 @ 11:59 PM', sessions: [
+                {
+                  num: 17, date: 'Tue, 10/14', title: 'Procedural Arguments: When Rules Persuade', core: 'Games persuade by what they let us do, not what they show.', question: 'How do Youngblood’s “expanded cinema” and Bogost’s “procedural rhetoric” show that rules argue more powerfully than images?', prompt: 'Apply “procedural rhetoric” to Everything. Relate to earlier cybernetic/algorithmic moving-image lineage.', readings: [
+                    { id: 'ACT4.W9.S17.A.1', label: 'Youngblood, Expanded Cinema (selections)', link: 'https://monoskop.org/images/5/5c/Youngblood_Gene_Expanded_Cinema.pdf' },
+                    { id: 'ACT4.W9.S17.A.2', label: 'Bogost, “Procedural Rhetoric” (chapter overview)', link: 'https://bogost.com/books/persuasive_games/' },
+                    { id: 'ACT4.W9.S17.B.1', label: 'OReilly, Everything (official site)', link: 'https://everything-game.com/' },
+                    { id: 'ACT4.W9.S17.B.2', label: 'Ars Technica, Sunspring (AI-written short)', link: 'https://www.youtube.com/watch?v=LY7x2Ihqjmc' }
+                  ]
+                },
+                {
+                  num: 18, date: 'Thu, 10/16', title: 'Eyes That Organize Desire: Cinema and the Gaze', core: 'Mainstream cinema is an algorithm for desire.', question: 'Where do “gaze,” attention design, and neuro-cinematic control intersect in film/games, and how are counter-gazes coded?', prompt: 'Using Mulvey, analyze how one film/game organizes looking. Include a title-sequence/VFX that trains attention.', readings: [
+                    { id: 'ACT4.W9.S18.A.1', label: 'Mulvey, “Visual Pleasure and Narrative Cinema”', link: 'https://warwick.ac.uk/fac/arts/english/currentstudents/undergraduate/modules/fulllist/third/en336/bibliography/mulveyvisualpleasure.pdf' },
+                    { id: 'ACT4.W9.S18.B.1', label: 'Art of the Title, Saul Bass designer page', link: 'https://www.artofthetitle.com/designer/saul-bass/' },
+                    { id: 'ACT4.W9.S18.B.2', label: 'Art of the Title, Westworld titles', link: 'https://www.artofthetitle.com/title/westworld/' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 10, title: 'Computation and Futurity (cont.)', focus: 'Human-Machine Co-Evolution: Technogenesis and Thinking Machines.', theme: '', dueDate: 'Thu, 10/23 @ 11:59 PM', sessions: [
+                {
+                  num: 19, date: 'Tue, 10/21', title: 'Reading with Machines: Cognition in the Digital Age', core: 'We’re already hybrid readers (close/hyper/machine).', question: 'How does technogenesis (Hayles) reshape cognition/labor as AI scales? What do we gain/lose?', prompt: 'Use Hayles + one artifact (Grey/Cheng) to map a concrete cognitive or labor shift you’ve observed.', readings: [
+                    { id: 'ACT4.W10.S19.A.1', label: 'Hayles, How We Think (Ch.1 “Digital Media & Contemporary Technogenesis”)', link: 'https://dms484.wordpress.com/wp-content/uploads/2017/01/hayles-how-we-think.pdf' },
+                    { id: 'ACT4.W10.S19.B.1', label: 'Grey, Humans Need Not Apply', link: 'https://www.youtube.com/watch?v=7Pq-S557XQU' },
+                    { id: 'ACT4.W10.S19.B.2', label: 'Cheng, Life After BOB: The Chalice Study', link: 'https://shuruqtramontini.com/Thousand-Lives' }
+                  ]
+                },
+                {
+                  num: 20, date: 'Thu, 10/23', title: 'The Imitation Game: Conversation as Interface', core: 'Asking if machines “think” redesigns the medium of dialogue.', question: 'What does the Turing Test reveal about intelligence as a *media* problem (performance, interface, genre)?', prompt: 'Read Turing + view 1968 film. Argue what kind of *conversation* should count as intelligence today.', readings: [
+                    { id: 'ACT4.W10.S20.A.1', label: 'Turing, “Computing Machinery and Intelligence” (Mind)', link: 'https://academic.oup.com/mind/article/LIX/236/433/986238' },
+                    { id: 'ACT4.W10.S20.A.2', label: '1968 film, “THE THINKING MACHINE” (NJ Bell / MIT)', link: 'https://www.youtube.com/watch?v=Ho5fy3BieSM' }
+                  ], notes: 'Short Paper 2: Spacing/Presence Analysis assigned today.'
+                }
+              ]
+            },
+            {
+              num: 11, title: 'Computation and Futurity (cont.)', focus: 'Speculative Design & Future-Making: Critical & Community Approaches.', theme: '', dueDate: 'Thu, 10/30 @ 11:59 PM', additionalDue: 'Short Paper 1 — Thu, 10/30 @ 11:59 PM', sessions: [
+                {
+                  num: 21, date: 'Tue, 10/28', title: 'Diegetic Prototypes: Futures You Can Hold', core: 'Objects can argue a future without saying a word.', question: 'How do diegetic prototypes (design fiction) provoke ethics/policy more effectively than white papers?', prompt: 'Analyze one design-fiction artifact (Bleecker, Dunne/Raby, or Selfish Ledger). What future does it argue into being—and for whom?', readings: [
+                    { id: 'ACT4.W11.S21.A.1', label: 'Bleecker, “Design Fiction” (PDF)', link: 'https://systemsorienteddesign.net/wp-content/uploads/2011/01/DesignFiction_WebEdition.pdf' },
+                    { id: 'ACT4.W11.S21.A.2', label: 'Dunne & Raby, Speculative Everything (Ch.1 PDF)', link: 'https://readings.design/PDF/speculative-everything.pdf' },
+                    { id: 'ACT4.W11.S21.A.3', label: 'Google X, The Selfish Ledger (video)', link: 'https://www.youtube.com/watch?v=LUSZfEBTwRc' },
+                    { id: 'ACT4.W11.S21.B.1', label: 'DiSalvo, Adversarial Design', link: 'https://mitpress.mit.edu/9780262528221/adversarial-design/' },
+                    { id: 'ACT4.W11.S21.B.2', label: 'MIT Media Lab, Shelley (AI horror)', link: 'https://www.media.mit.edu/articles/can-artificial-intelligence-learn-to-scare-us-with-shelley-mit-researchers-aim-for-goosebumps/' },
+                    { id: 'ACT4.W11.S21.B.3', label: 'Blade Runner 2049, “Memory Maker” clip', link: 'https://www.youtube.com/watch?v=AS_QN4IrWcU' }
+                  ]
+                },
+                {
+                  num: 22, date: 'Thu, 10/30', title: 'Community Signal: Local Futures, Afrokosmic Media', core: 'Futures scale when they start small and stay situated.', question: 'How do community-rooted practices (Afrofuturist/queer ecologies) build durable futures beyond extractive tech?', prompt: 'Draft a local diegetic prototype (policy, object, ritual) using Sankofa principles and “real-fictional entanglements.”', readings: [
+                    { id: 'ACT4.W11.S22.A.1', label: 'Exhibition, KAOS THEORY: Ben Caldwell', link: 'https://www.artandpractice.org/exhibitions/exhibition/kaos-theory-the-afrokosmic-media-arts-of-ben-caldwell/' },
+                    { id: 'ACT4.W11.S22.A.2', label: 'Baumann et al., Sankofa City (community AR futures)', link: 'https://vimeo.com/211625350' },
+                    { id: 'ACT4.W11.S22.B.1', label: 'Biggs, “Fabulating Bog Girl…” (CHI ’24)', link: 'https://doi.org/10.1145/3706598.3714067' },
+                    { id: 'ACT4.W11.S22.B.2', label: 'Wong et al., “Real-Fictional Entanglements…” (DIS ’17)', link: 'https://doi.org/10.1145/3064663.3064682' }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          act: 'Act V — Haunted Presents & Ethical Futures', range: 'Weeks 12-14', stakes: 'Time, memory, and kinship.', core: 'Media fold time, carrying ghosts and canceling futures. Authenticity, memory, and ethics are redefined by new forms of reproduction and interaction.', task: 'Read what the past left unfinished via remix, Afrofuturist myth, or uncanny AI image. Grapple with the ethical implications of co-existing with intelligent machines and the shaping of future realities. If media fold time, the fight is over which pasts and presents remain audible.',
+          weeks: [
+            {
+              num: 12, title: 'Haunted Presents & Ethical Futures (cont.)', focus: 'Hauntings, Hyperstitions, and Sympathetic Worlds.', theme: '', dueDate: 'Thu, 11/06 @ 11:59 PM', additionalDue: 'Project Proposal — Thu, 11/06 @ 11:59 PM', sessions: [
+                {
+                  num: 23, date: 'Tue, 11/04', title: 'Haunting the Future: Afrofuturism, Hauntology, and the Uncanny', core: 'The future is always haunted; what haunts depends on whose time has been broken.', question: 'How do Freud’s “uncanny” and Fisher’s “crackle” intersect with Afrofuturism/hyperstition in tech futures?', prompt: 'Using Freud/Fisher, analyze Black Metal or Okorafor’s Mother of Invention. How do they stage hauntings? Where does hyperstition turn fiction into reality?', readings: [
+                    { id: 'ACT5.W12.S23.A.1', label: 'Black Metal / Odyssey of Imagination', link: 'https://www.newyorksaid.com/black-metal-an-odyssey-of-imagination-and-speculative-futures/' },
+                    { id: 'ACT5.W12.S23.A.2', label: 'Fisher, Metaphysics of Crackle', link: 'https://dj.dancecult.net/index.php/dancecult/article/view/378' },
+                    { id: 'ACT5.W12.S23.A.3', label: 'Freud, The Uncanny', link: 'https://web.mit.edu/allanmc/www/freud1.pdf' },
+                    { id: 'ACT5.W12.S23.B.1', label: 'Short Prehistory of CCRU', link: 'http://www.ccru.net/id(entity)/ccruhistory.htm' },
+                    { id: 'ACT5.W12.S23.B.2', label: 'Okorafor, Mother of Invention', link: 'https://slate.com/technology/2018/02/mother-of-invention-a-new-short-story-by-nnedi-okorafor.html' },
+                    { id: 'ACT5.W12.S23.B.3', label: 'CCRU as Philosophy in Digital World', link: 'https://nl.ijs.si/jtdh22/pdf/JTDH2022_Balic_The-CCRU-as-an-Attempt-of-Doing-Philosophy-in-a-Digital-World.pdf' }
+                  ]
+                },
+                {
+                  num: 24, date: 'Thu, 11/06', title: 'Sympathetic Interfaces: Magic Rules Still Rule', core: 'Interfaces work because magic rules still rule.', question: 'How do sympathetic magic’s principles shape the ethics of representing memory, identity, community in media?', prompt: 'Use Frazer’s laws to analyze a photographic/filmic project (Portraits and Dreams, Stranger with a Camera). How does its “magic” raise ethical questions?', readings: [
+                    { id: 'ACT5.W12.S24.A.1', label: 'Sympathetic Magic: Photo Essay', link: 'https://magpiesmagazine.com/2023/02/28/an-explanation-of-sympathetic-magic-a-photo-essay/' },
+                    { id: 'ACT5.W12.S24.A.2', label: 'Sachs, Sympathetic Magic (Talk)', link: 'https://www.youtube.com/watch?v=V8aeaX6Kozw' },
+                    { id: 'ACT5.W12.S24.A.3', label: 'Frazer, The Golden Bough (pp. 18–19)', link: 'https://www.templeofearth.com/books/goldenbough.pdf' },
+                    { id: 'ACT5.W12.S24.B.1', label: 'Lawton, Expanded Childhood', link: 'https://samlawton.space/expanded-childhood-film' },
+                    { id: 'ACT5.W12.S24.B.2', label: 'Ewald, Portraits and Dreams', link: 'https://wendyewald.com/portfolio/portraits-and-dreams/' },
+                    { id: 'ACT5.W12.S24.B.3', label: 'Barret, Stranger with a Camera', link: 'https://www.pbs.org/pov/films/strangerwithacamera/' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 13, title: 'Haunted Presents & Ethical Futures (cont.)', focus: 'Ethical Futures: Cyborgs, Kinship, and AI Alignment.', theme: '', dueDate: 'Thu, 11/13 @ 11:59 PM', sessions: [
+                {
+                  num: 25, date: 'Tue, 11/11', title: 'Machines of Loving What, Exactly?', core: 'Alignment is a pastoral fantasy—until it isn’t.', question: 'How do utopian visions of “machines of loving grace” clash with AI alignment and control realities?', prompt: 'Compare Brautigan’s poem with Amodei on AI alignment and Curtis’s critique. What shifts in hope/anxiety emerge?', readings: [
+                    { id: 'ACT5.W13.S25.A.1', label: 'Brautigan, All Watched Over By Machines of Loving Grace', link: 'https://allpoetry.com/All-Watched-Over-By-Machines-Of-Loving-Grace' },
+                    { id: 'ACT5.W13.S25.A.2', label: 'Amodei, Machines of Loving Grace', link: 'https://www.darioamodei.com/essay/machines-of-loving-grace' },
+                    { id: 'ACT5.W13.S25.A.3', label: 'Curtis, Machines of Loving Grace (Ep. 2)', link: 'https://www.youtube.com/watch?v=DgU6DNkXHJA' },
+                    { id: 'ACT5.W13.S25.B.1', label: 'The Incredible Machine (1968)', link: 'https://www.youtube.com/watch?v=iwVu2BWLZqA' },
+                    { id: 'ACT5.W13.S25.B.2', label: 'Finn, What Algorithms Want (excerpts)', link: '#' }
+                  ]
+                },
+                {
+                  num: 26, date: 'Thu, 11/13', title: 'Cyborg Kin: Making Relatives with Machines', core: 'If we made kin with machines, problems might dissolve into negotiated obligations.', question: 'How does treating machines as kin (Haraway, Indigenous protocols) change posthuman futures?', prompt: 'Apply Haraway’s cyborg ontology and “making kin” to envision ethical, reciprocal AI relationships.', readings: [
+                    { id: 'ACT5.W13.S26.A.1', label: 'Haraway, A Cyborg Manifesto', link: 'https://warwick.ac.uk/fac/arts/english/currentstudents/undergraduate/modules/fictionnownarrativemediaandtheoryinthe21stcentury/manifestly_haraway_----_a_cyborg_manifesto_science_technology_and_socialist-feminism_in_the_....pdf' },
+                    { id: 'ACT5.W13.S26.A.2', label: 'Lewis et al., Making Kin with the Machines', link: 'https://jods.mitpress.mit.edu/pub/lewis-arista-pechawis-kite/release/1' },
+                    { id: 'ACT5.W13.S26.B.1', label: 'McDowell, Designing Neural Media', link: 'https://www.youtube.com/watch?v=8_XiLQjxHVI' },
+                    { id: 'ACT5.W13.S26.B.2', label: 'Pharmako-AI', link: 'https://www.are.na/block/21398733' }
+                  ]
+                }
+              ]
+            },
+            {
+              num: 14, title: 'Haunted Presents & Ethical Futures (cont.)', focus: 'Platform Power, AI Slop, and the Limits of the Machine.', theme: '', dueDate: 'Thu, 11/20 @ 11:59 PM', additionalDue: 'Artifact Draft + Bibliography — Tue, 11/18 @ 11:59 PM', sessions: [
+                {
+                  num: 27, date: 'Tue, 11/18', title: 'Platform Vernaculars & Enshittification: Who Owns the Feed?', core: 'Platforms don’t just host culture—they feed on it.', question: 'How do communities resist/adapt as platforms degrade through “enshittification”?', prompt: 'Use Doctorow/Brock to analyze a platform’s trajectory, factoring in AI slop and memetic trends.', readings: [
+                    { id: 'ACT5.W14.S27.A.1', label: 'Brock, From the Blackhand Side', link: 'https://www.researchgate.net/profile/Andre-Brock/publication/327186182_From_the_Blackhand_Side_Twitter_as_a_Cultural_Conversation/links/56e336e508ae98445c1b2d0a/From-the-Blackhand-Side-Twitter-as-a-Cultural-Conversation.pdf' },
+                    { id: 'ACT5.W14.S27.A.2', label: 'Doctorow, “Enshittification” of TikTok', link: 'https://www.wired.com/story/tiktok-platforms-cory-doctorow/' },
+                    { id: 'ACT5.W14.S27.A.3', label: 'Tufekci, Twitter and Tear Gas', link: 'https://www.wired.com/2017/05/twitter-tear-gas-protest-age-social-media/' },
+                    { id: 'ACT5.W14.S27.A.4', label: 'U.S. created “Cuban Twitter”', link: 'https://www.theguardian.com/world/2014/apr/03/us-cuban-twitter-zunzuneo-stir-unrest' },
+                    { id: 'ACT5.W14.S27.B.1', label: 'Oliver, AI Slop', link: 'https://www.youtube.com/watch?v=TWpg1RmzAbc&t=4s' },
+                    { id: 'ACT5.W14.S27.B.2', label: 'Hard Fork, Italian Brainrot', link: 'https://www.youtube.com/watch?v=Wo2NZ8kjvF4' },
+                    { id: 'ACT5.W14.S27.B.3', label: 'Short Film, Writing Doom', link: 'https://www.youtube.com/watch?v=xfMQ7hzyFW4' }
+                  ]
+                },
+                {
+                  num: 28, date: 'Thu, 11/20', title: 'Aesthetic Alignment: Do AIs Deserve Their Own Audiences?', core: 'Reproduction doesn’t just shift aura—it may create non-human audiences.', question: 'Must aesthetic alignment serve human taste, or should machines pursue alien beauty?', prompt: 'Using Arielli/Dreyfus, debate whether AI aesthetics should be human-aligned or independent. Manovich’s cultural analytics?', readings: [
+                    { id: 'ACT5.W14.S28.A.1', label: 'Arielli & Manovich, Made By and For Humans?', link: 'https://manovich.net/content/04-projects/179-artificial-aesthetics/manovich_and_arielli.artificial_aesthetics.all_chapters_final.pdf' },
+                    { id: 'ACT5.W14.S28.A.2', label: 'Dreyfus, What Computers Can’t Do (Conclusion)', link: 'https://monoskop.org/images/c/ce/Dreyfus_Hubert_What_Computers_Cant_Do_A_Critique_of_Artificial_Reason.pdf' },
+                    { id: 'ACT5.W14.S28.B.1', label: 'Manovich, Language of Tomorrow', link: 'https://www.youtube.com/watch?v=tnZkeXCmvrM' }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          act: 'Act VI — Exhibition / Accountability', range: 'Week 15', stakes: 'Responsibility.', core: 'Meaning lands provisionally in public artifacts. To display is to take responsibility for a world.', task: 'Stage artifacts carrying moods, truths, obligations. Recognize display as a decision about who lives with consequences. Exhibitions, platforms, publics: where deferred meaning becomes accountable.',
+          weeks: [
+            {
+              num: 15, title: 'Exhibition / Accountability (cont.)', focus: 'Synthesis & Speculation: Presenting Media Futures.', theme: '', dueDate: 'Final Project Submission — Tue, 12/02 @ 11:59 PM', sessions: [
+                {
+                  num: 29, date: 'Tue, 11/25', title: 'Midwives, Not Critics: Feedback as Design Material', core: 'Feedback is a medium of world-building.', question: 'How can critique function as co-creation, not judgment?', prompt: 'Participate in peer feedback for Sankofa Futures Project. Focus on clarity, theme integration, artifact effectiveness.', readings: [
+                    { id: 'ACT6.W15.S29.A.1', label: '(No assigned readings — full workshop)', link: '#' },
+                    { id: 'ACT6.W15.S29.B.1', label: 'Sankofa Futures peer feedback guidelines/rubric', link: '#' }
+                  ], notes: 'Bring artifact draft for in-class workshop — Tue, 11/25 @ 11:59 PM.'
+                },
+                {
+                  num: 30, date: 'Tue, 12/02', title: 'Memory Remains: Exhibits as Interfaces to Futures', core: 'Exhibits are where futures meet accountability.', question: 'How do exhibits mediate between speculative futures and their publics?', prompt: 'Present final Sankofa Futures Project. Explain core argument, course concept integration, implications for media/futures. Discuss design/collaboration.', readings: [
+                    { id: 'ACT6.W15.S30.A.1', label: '(Final Project Session - No new readings)', link: '#' },
+                    { id: 'ACT6.W15.S30.B.1', label: '(Final Project Session - No new readings)', link: '#' }
+                  ], notes: `<strong>Final Project Submission:</strong> Presentation: 10–12 min live + artifact (zine, installation, digital demo). Exhibit Note: 2–3 pages. AI-Assisted Remediation / World-Building: 1700–2000 words (PDF + Works Cited, MLA). Rubric: Integration of authors, Quality of projection, Contextual nuance, Rigor, Style.`
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      dl: [
+        { date: 'Tue, 08/26', reading: 'ACT1.W2.S3.A.1 — Miroshnichenko, Human as Media', slot: 1, id: 'dl_ACT1_W2_S3_A1_1' },
+        { date: 'Tue, 08/26', reading: 'ACT1.W2.S3.B.1 — Victor, Media for Thinking', slot: 2, id: 'dl_ACT1_W2_S3_B1_2' },
+        { date: 'Thu, 08/28', reading: 'ACT1.W2.S4.A.1 — Geertz, Concept of Culture on Man', slot: 3, id: 'dl_ACT1_W2_S4_A1_3' },
+        { date: 'Thu, 08/28', reading: 'ACT1.W2.S4.A.2 — McLuhan, Medium Is the Message', slot: 4, id: 'dl_ACT1_W2_S4_A2_4' },
+        { date: 'Thu, 08/28', reading: 'ACT1.W2.S4.B.1 — Rubin, The Way of Code', slot: 5, id: 'dl_ACT1_W2_S4_B1_5' },
+        { date: 'Tue, 09/02', reading: 'ACT1.W3.S5.A.1 — Barthes, How to Read Signs in News', slot: 6, id: 'dl_ACT1_W3_S5_A1_6' },
+        { date: 'Tue, 09/02', reading: 'ACT1.W3.S5.A.2 — Barthes, World of Wrestling', slot: 7, id: 'dl_ACT1_W3_S5_A2_7' },
+        { date: 'Tue, 09/02', reading: 'ACT1.W3.S5.B.1 — LLMs, From Word Models to World Models', slot: 8, id: 'dl_ACT1_W3_S5_B1_8' },
+        { date: 'Tue, 09/02', reading: 'ACT1.W3.S5.B.2 — Brier, Ptah Creating World with Words', slot: 9, id: 'dl_ACT1_W3_S5_B2_9' },
+        { date: 'Tue, 09/02', reading: 'ACT1.W3.S5.B.3 — Memphite Theology, Shabaka Stone & Intro', slot: 10, id: 'dl_ACT1_W3_S5_B3_10' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.A.1 — Carey, Cultural Approach to Communication', slot: 11, id: 'dl_ACT1_W3_S6_A1_11' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.A.2 — Kittler, Gramophone, Film, Typewriter', slot: 12, id: 'dl_ACT1_W3_S6_A2_12' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.B.1 — Keats, Ode on a Grecian Urn', slot: 13, id: 'dl_ACT1_W3_S6_B1_13' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.B.2 — Bajohr, Operative Ekphrasis', slot: 14, id: 'dl_ACT1_W3_S6_B2_14' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.B.3 — Wild, Say What You See', slot: 15, id: 'dl_ACT1_W3_S6_B3_15' },
+        { date: 'Thu, 09/04', reading: 'ACT1.W3.S6.B.4 — Apollinaire, Poet Who Painted with Words', slot: 16, id: 'dl_ACT1_W3_S6_B4_16' },
+        { date: 'Tue, 09/09', reading: 'ACT1.W4.S7.A.1 — Bolter & Grusin, Immediacy, Hypermediacy', slot: 17, id: 'dl_ACT1_W4_S7_A1_17' },
+        { date: 'Tue, 09/09', reading: 'ACT1.W4.S7.B.1 — McCloud, Understanding Comics', slot: 18, id: 'dl_ACT1_W4_S7_B1_18' },
+        { date: 'Thu, 09/11', reading: 'ACT1.W4.S8.A.1 — Benjamin, Work of Art in Age of Mech. Repro.', slot: 19, id: 'dl_ACT1_W4_S8_A1_19' },
+        { date: 'Thu, 09/11', reading: 'ACT1.W4.S8.A.2 — Benjamin, Thesis IX: Angelus Novus', slot: 20, id: 'dl_ACT1_W4_S8_A2_20' },
+        { date: 'Thu, 09/11', reading: 'ACT1.W4.S8.B.1 — Video Essay, Angel of History', slot: 21, id: 'dl_ACT1_W4_S8_B1_21' },
+        { date: 'Thu, 09/11', reading: 'ACT1.W4.S8.B.2 — Stanley, Work of Art in Age of Algo. (Re)prod.', slot: 22, id: 'dl_ACT1_W4_S8_B2_22' },
+        { date: 'Tue, 09/16', reading: 'ACT2.W5.S9.A.1 — Sontag, In Plato’s Cave', slot: 23, id: 'dl_ACT2_W5_S9_A1_23' },
+        { date: 'Tue, 09/16', reading: 'ACT2.W5.S9.A.2 — Bazin, Ontology of Photographic Image', slot: 24, id: 'dl_ACT2_W5_S9_A2_24' },
+        { date: 'Thu, 09/18', reading: 'ACT2.W5.S10.A.1 — Flusser, Towards a Philosophy of Photography', slot: 25, id: 'dl_ACT2_W5_S10_A1_25' },
+        { date: 'Thu, 09/18', reading: 'ACT2.W5.S10.B.1 — Jurgenson, The IRL Fetish', slot: 26, id: 'dl_ACT2_W5_S10_B1_26' },
+        { date: 'Tue, 09/23', reading: 'ACT2.W6.S11.A.1 — Hall, Encoding/Decoding in TV Discourse', slot: 27, id: 'dl_ACT2_W6_S11_A1_27' },
+        { date: 'Tue, 09/23', reading: 'ACT2.W6.S11.A.2 — Hall, Race, Gender, Class in Media', slot: 28, id: 'dl_ACT2_W6_S11_A2_28' },
+        { date: 'Tue, 09/23', reading: 'ACT2.W6.S11.B.1 — Buolamwini, AI, Ain’t I a Woman?', slot: 29, id: 'dl_ACT2_W6_S11_B1_29' },
+        { date: 'Tue, 09/23', reading: 'ACT2.W6.S11.B.2 — Film, Coded Bias', slot: 30, id: 'dl_ACT2_W6_S11_B2_30' },
+        { date: 'Tue, 09/23', reading: 'ACT2.W6.S11.B.3 — Buolamwini & Gebru, Gender Shades', slot: 31, id: 'dl_ACT2_W6_S11_B3_31' },
+        { date: 'Thu, 09/25', reading: 'ACT2.W6.S12.A.1 — Hall, Notes on Deconstructing “the Popular”', slot: 32, id: 'dl_ACT2_W6_S12_A1_32' },
+        { date: 'Thu, 09/25', reading: 'ACT2.W6.S12.A.2 — Innis, The Bias of Communication', slot: 33, id: 'dl_ACT2_W6_S12_A2_33' },
+        { date: 'Thu, 09/25', reading: 'ACT2.W6.S12.B.1 — Gaiman, How Stories Last', slot: 34, id: 'dl_ACT2_W6_S12_B1_34' },
+        { date: 'Thu, 09/25', reading: 'ACT2.W6.S12.B.2 — 99% Invisible, Ten Thousand Years', slot: 35, id: 'dl_ACT2_W6_S12_B2_35' },
+        { date: 'Tue, 09/30', reading: 'ACT2.W7.S13.A.1 — Ong, Orality and Literacy (ch. 1)', slot: 36, id: 'dl_ACT2_W7_S13_A1_36' },
+        { date: 'Tue, 09/30', reading: 'ACT2.W7.S13.A.2 — Schafer, The Soundscape', slot: 37, id: 'dl_ACT2_W7_S13_A2_37' },
+        { date: 'Tue, 09/30', reading: 'ACT2.W7.S13.B.1 — 99% Invisible, Ep 15: Sound of Artificial World', slot: 38, id: 'dl_ACT2_W7_S13_B1_38' },
+        { date: 'Tue, 09/30', reading: 'ACT2.W7.S13.B.2 — Herndon, PROTO', slot: 39, id: 'dl_ACT2_W7_S13_B2_39' },
+        { date: 'Tue, 09/30', reading: 'ACT2.W7.S13.B.3 — Haskell, When Earth Started to Sing', slot: 40, id: 'dl_ACT2_W7_S13_B3_40' },
+        { date: 'Thu, 10/02', reading: 'ACT2.W7.S14.A.1 — Cage, Silence', slot: 41, id: 'dl_ACT2_W7_S14_A1_41' },
+        { date: 'Thu, 10/02', reading: 'ACT2.W7.S14.A.2 — Sterne, The Audible Past', slot: 42, id: 'dl_ACT2_W7_S14_A2_42' },
+        { date: 'Thu, 10/02', reading: 'ACT2.W7.S14.B.1 — Sapir/Whorf, Status of Linguistic Relativity', slot: 43, id: 'dl_ACT2_W7_S14_B1_43' },
+        { date: 'Tue, 10/07', reading: 'ACT3.W8.S15.A.1 — Bush, As We May Think', slot: 44, id: 'dl_ACT3_W8_S15_A1_44' },
+        { date: 'Tue, 10/07', reading: 'ACT3.W8.S15.A.2 — Nelson, Literary Machines (Ch. 2)', slot: 45, id: 'dl_ACT3_W8_S15_A2_45' },
+        { date: 'Tue, 10/07', reading: 'ACT3.W8.S15.B.1 — Herzog, Lo and Behold', slot: 46, id: 'dl_ACT3_W8_S15_B1_46' },
+        { date: 'Thu, 10/09', reading: 'ACT3.W8.S16.A.1 — Gillespie, Custodians of the Internet', slot: 47, id: 'dl_ACT3_W8_S16_A1_47' },
+        { date: 'Thu, 10/09', reading: 'ACT3.W8.S16.A.2 — Conte, Death of the Follower', slot: 48, id: 'dl_ACT3_W8_S16_A2_48' },
+        { date: 'Thu, 10/09', reading: 'ACT3.W8.S16.B.1 — Curtis, Can’t Get You Out of My Head (Ep 6)', slot: 49, id: 'dl_ACT3_W8_S16_B1_49' },
+        { date: 'Thu, 10/09', reading: 'ACT3.W8.S16.B.2 — Ezra Klein Show, How Attention Economy Devours Gen Z', slot: 50, id: 'dl_ACT3_W8_S16_B2_50' },
+        { date: 'Tue, 10/14', reading: 'ACT4.W9.S17.A.1 — Youngblood, Expanded Cinema (selections)', slot: 51, id: 'dl_ACT4_W9_S17_A1_51' },
+        { date: 'Tue, 10/14', reading: 'ACT4.W9.S17.A.2 — Bogost, Procedural Rhetoric', slot: 52, id: 'dl_ACT4_W9_S17_A2_52' },
+        { date: 'Tue, 10/14', reading: 'ACT4.W9.S17.B.1 — OReilly, Everything (official site)', slot: 53, id: 'dl_ACT4_W9_S17_B1_53' },
+        { date: 'Tue, 10/14', reading: 'ACT4.W9.S17.B.2 — Ars Technica, Sunspring (AI-written short)', slot: 54, id: 'dl_ACT4_W9_S17_B2_54' },
+        { date: 'Thu, 10/16', reading: 'ACT4.W9.S18.A.1 — Mulvey, Visual Pleasure and Narrative Cinema', slot: 55, id: 'dl_ACT4_W9_S18_A1_55' },
+        { date: 'Thu, 10/16', reading: 'ACT4.W9.S18.B.1 — Art of the Title, Saul Bass designer page', slot: 56, id: 'dl_ACT4_W9_S18_B1_56' },
+        { date: 'Thu, 10/16', reading: 'ACT4.W9.S18.B.2 — Art of the Title, Westworld titles', slot: 57, id: 'dl_ACT4_W9_S18_B2_57' },
+        { date: 'Tue, 10/21', reading: 'ACT4.W10.S19.A.1 — Hayles, How We Think (Ch.1)', slot: 58, id: 'dl_ACT4_W10_S19_A1_58' },
+        { date: 'Tue, 10/21', reading: 'ACT4.W10.S19.B.1 — Grey, Humans Need Not Apply', slot: 59, id: 'dl_ACT4_W10_S19_B1_59' },
+        { date: 'Tue, 10/21', reading: 'ACT4.W10.S19.B.2 — Cheng, Life After BOB: The Chalice Study', slot: 60, id: 'dl_ACT4_W10_S19_B2_60' },
+        { date: 'Thu, 10/23', reading: 'ACT4.W10.S20.A.1 — Turing, Computing Machinery and Intelligence', slot: 61, id: 'dl_ACT4_W10_S20_A1_61' },
+        { date: 'Thu, 10/23', reading: 'ACT4.W10.S20.A.2 — 1968 film, THE THINKING MACHINE', slot: 62, id: 'dl_ACT4_W10_S20_A2_62' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.A.1 — Bleecker, Design Fiction', slot: 63, id: 'dl_ACT4_W11_S21_A1_63' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.A.2 — Dunne & Raby, Speculative Everything (Ch.1)', slot: 64, id: 'dl_ACT4_W11_S21_A2_64' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.A.3 — Google X, The Selfish Ledger (video)', slot: 65, id: 'dl_ACT4_W11_S21_A3_65' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.B.1 — DiSalvo, Adversarial Design', slot: 66, id: 'dl_ACT4_W11_S21_B1_66' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.B.2 — MIT Media Lab, Shelley (AI horror)', slot: 67, id: 'dl_ACT4_W11_S21_B2_67' },
+        { date: 'Tue, 10/28', reading: 'ACT4.W11.S21.B.3 — Blade Runner 2049, Memory Maker clip', slot: 68, id: 'dl_ACT4_W11_S21_B3_68' },
+        { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.A.1 — Exhibition, KAOS THEORY: Ben Caldwell', slot: 69, id: 'dl_ACT4_W11_S22_A1_69' },
+        { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.A.2 — Baumann et al., Sankofa City (community AR)', slot: 70, id: 'dl_ACT4_W11_S22_A2_70' },
+        { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.B.1 — Biggs, “Fabulating Bog Girl…” (CHI ’24)', slot: 71, id: 'dl_ACT4_W11_S22_B1_71' },
+        { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.B.2 — Wong et al., “Real-Fictional Entanglements…” (DIS ’17)', slot: 72, id: 'dl_ACT4_W11_S22_B2_72' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.1 — Black Metal / Odyssey of Imagination', slot: 73, id: 'dl_ACT5_W12_S23_A1_73' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.2 — Fisher, Metaphysics of Crackle', slot: 74, id: 'dl_ACT5_W12_S23_A2_74' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.3 — Freud, The Uncanny', slot: 75, id: 'dl_ACT5_W12_S23_A3_75' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.1 — Short Prehistory of CCRU', slot: 76, id: 'dl_ACT5_W12_S23_B1_76' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.2 — Okorafor, Mother of Invention', slot: 77, id: 'dl_ACT5_W12_S23_B2_77' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.3 — CCRU as Philosophy in Digital World', slot: 78, id: 'dl_ACT5_W12_S23_B3_78' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.1 — Sympathetic Magic: Photo Essay', slot: 79, id: 'dl_ACT5_W12_S24_A1_79' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.2 — Sachs, Sympathetic Magic (Talk)', slot: 80, id: 'dl_ACT5_W12_S24_A2_80' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.3 — Frazer, The Golden Bough (pp. 18–19)', slot: 81, id: 'dl_ACT5_W12_S24_A3_81' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.1 — Lawton, Expanded Childhood', slot: 82, id: 'dl_ACT5_W12_S24_B1_82' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.2 — Ewald, Portraits and Dreams', slot: 83, id: 'dl_ACT5_W12_S24_B2_83' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.3 — Barret, Stranger with a Camera', slot: 84, id: 'dl_ACT5_W12_S24_B3_84' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.1 — Brautigan, All Watched Over By Machines of Loving Grace', slot: 85, id: 'dl_ACT5_W13_S25_A1_85' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.2 — Amodei, Machines of Loving Grace', slot: 86, id: 'dl_ACT5_W13_S25_A2_86' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.3 — Curtis, Machines of Loving Grace (Ep. 2)', slot: 87, id: 'dl_ACT5_W13_S25_A3_87' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.1 — The Incredible Machine (1968)', slot: 88, id: 'dl_ACT5_W13_S25_B1_88' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.2 — Finn, What Algorithms Want (excerpts)', slot: 89, id: 'dl_ACT5_W13_S25_B2_89' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.1 — Haraway, A Cyborg Manifesto', slot: 90, id: 'dl_ACT5_W13_S26_A1_90' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.2 — Lewis et al., Making Kin with the Machines', slot: 91, id: 'dl_ACT5_W13_S26_A2_91' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.1 — McDowell, Designing Neural Media', slot: 92, id: 'dl_ACT5_W13_S26_B1_92' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.2 — Pharmako-AI', slot: 93, id: 'dl_ACT5_W13_S26_B2_93' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.1 — Brock, From the Blackhand Side', slot: 94, id: 'dl_ACT5_W14_S27_A1_94' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.2 — Doctorow, “Enshittification” of TikTok', slot: 95, id: 'dl_ACT5_W14_S27_A2_95' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.3 — Tufekci, Twitter and Tear Gas', slot: 96, id: 'dl_ACT5_W14_S27_A3_96' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.4 — U.S. created “Cuban Twitter”', slot: 97, id: 'dl_ACT5_W14_S27_A4_97' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.1 — Oliver, AI Slop', slot: 98, id: 'dl_ACT5_W14_S27_B1_98' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.2 — Hard Fork, Italian Brainrot', slot: 99, id: 'dl_ACT5_W14_S27_B2_99' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.3 — Short Film, Writing Doom', slot: 100, id: 'dl_ACT5_W14_S27_B3_100' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.1 — Arielli & Manovich, Made By and For Humans?', slot: 101, id: 'dl_ACT5_W14_S28_A1_101' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.2 — Dreyfus, What Computers Can’t Do (Conclusion)', slot: 102, id: 'dl_ACT5_W14_S28_A2_102' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.B.1 — Manovich, Language of Tomorrow', slot: 103, id: 'dl_ACT5_W14_S28_B1_103' },
+        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.A.1 — (No assigned readings — full workshop)', slot: 104, id: 'dl_ACT6_W15_S29_A1_104' },
+        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.B.1 — Sankofa Futures peer feedback guidelines/rubric', slot: 105, id: 'dl_ACT6_W15_S29_B1_105' },
+        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.A.1 — (Final Project Session - No new readings)', slot: 106, id: 'dl_ACT6_W15_S30_A1_106' },
+        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.B.1 — (Final Project Session - No new readings)', slot: 107, id: 'dl_ACT6_W15_S30_B1_107' }
+      ]
+    };
+
+    // ==========================
+    // THEME TOGGLER
+    // ==========================
+    const root = document.body;
+    const modeButtons = document.querySelectorAll('.modes button');
+
+    function setTheme(mode){
+      root.classList.remove('theme-dark','theme-news'); // Only these two are custom themes
+      if(mode==='dark') root.classList.add('theme-dark');
+      if(mode==='news') root.classList.add('theme-news');
+      modeButtons.forEach(b=>{
+        const active = b.dataset.mode===mode;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', String(active));
+      });
+      localStorage.setItem('lmc2400_theme', mode);
+    }
+
+    // initialize theme
+    setTheme(localStorage.getItem('lmc2400_theme') || 'dark');
+    modeButtons.forEach(b=> b.addEventListener('click',()=> setTheme(b.dataset.mode)));
+
+    // ==========================
+    // TABS
+    // ==========================
+    const tabs = document.querySelectorAll('.tabs button');
+    const sections = document.querySelectorAll('main > section');
+    function showTab(id){
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.tab===id));
+      sections.forEach(s => s.style.display = (s.dataset.view===id)?'block':'none');
+      localStorage.setItem('lmc2400_tab', id);
+    }
+    tabs.forEach(t=> t.addEventListener('click', ()=> showTab(t.dataset.tab)));
+    showTab(localStorage.getItem('lmc2400_tab') || 'home');
+
+    // ==========================
+    // RENDER HOME TAB CONTENT
+    // ==========================
+    function renderHomeContent() {
+      // Course Snapshot
+      document.getElementById('course-meeting').textContent = DATA.course.meeting;
+      document.getElementById('course-location').textContent = DATA.course.location;
+      document.getElementById('course-instructor').textContent = DATA.course.instructor;
+      const courseEmail = document.getElementById('course-email');
+      courseEmail.href = `mailto:${DATA.course.email}`;
+      courseEmail.textContent = DATA.course.email;
+
+      const gradePillsContainer = document.getElementById('grade-breakdown-pills');
+      gradePillsContainer.innerHTML = DATA.detailedAssignments.map(assign =>
+        `<span class="pill ${assign.percentage.includes('25%') ? 'accent' : ''}">${assign.title.split(':')[0]} · ${assign.percentage}</span>`
+      ).join('');
+
+      // Course Overview
+      document.getElementById('course-overview-content').innerHTML = cleanHtml(`<p class="dropcap">${DATA.overview}</p>`);
+
+      // Course Ethos
+      document.getElementById('course-ethos-content').innerHTML = cleanHtml(`<p>${DATA.ethos}</p>`);
+
+      // How the Course Works
+      const howItWorksList = document.getElementById('how-it-works-content');
+      howItWorksList.innerHTML = `<p>Think of this class as a living loop:</p><ul>${DATA.howItWorks.map(item => `<li>${item}</li>`).join('')}</ul>`;
+
+      // Course Journey
+      const courseJourneyList = document.getElementById('course-journey-list');
+      courseJourneyList.innerHTML = DATA.courseJourney.map((act, index) => `
+        <li>
+          <strong>${act.act} (${act.weeks})</strong><br>
+          <strong>Stakes:</strong> ${act.stakes} <strong>Core Idea:</strong> ${act.coreIdea}
+        </li>
+      `).join('');
+
+      // Guiding Frameworks
+      const frameworksList = document.getElementById('frameworks-list');
+      frameworksList.innerHTML = DATA.frameworks.map(f => `
+        <li><strong>${f.title}:</strong> ${cleanHtml(f.question)}</li>
+      `).join('');
+    }
+    renderHomeContent();
+
+
+    // ==========================
+    // RENDER SCHEDULE
+    // ==========================
+    const $sched = document.getElementById('schedule');
+    let currentScheduleView = localStorage.getItem('lmc2400_schedule_view') || 'act'; // Default to act view
+
+    // SVG icon for external links
+    const externalLinkIcon = `<svg class="ext-link-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+
+    // Helpers for displaying dates inline in schedule summaries
+    function formatDateLabel(dateStr) {
+      // Input like: "Tue, 09/02" -> Output: "Tue 09/02"
+      if (!dateStr || typeof dateStr !== 'string') return '';
+      const parts = dateStr.split(',');
+      if (parts.length < 2) return dateStr;
+      return `${parts[0].trim()} ${parts[1].trim()}`;
+    }
+
+    function weekRangeLabel(weekItem) {
+      if (!weekItem || !Array.isArray(weekItem.sessions) || weekItem.sessions.length === 0) return '';
+      const first = weekItem.sessions[0].date;
+      const last = weekItem.sessions[weekItem.sessions.length - 1].date;
+      if (!first) return '';
+      if (!last || first === last) return formatDateLabel(first);
+      return `${formatDateLabel(first)} — ${formatDateLabel(last)}`;
+    }
+
+    // Roman numerals for Act pill and cleaning Act titles
+    function toRoman(n) {
+      const map = ['','I','II','III','IV','V','VI','VII','VIII','IX','X'];
+      return map[n] || String(n);
+    }
+    function cleanActTitle(title) {
+      if (!title) return '';
+      // Remove leading "Act I —" or "Act 1 -" patterns
+      return title.replace(/^Act\s*[IVXLC0-9]+\s*[—-]\s*/i, '').trim();
+    }
+    function actRangeLabel(actGroup) {
+      if (!actGroup || !Array.isArray(actGroup.weeks)) return '';
+      // find first session date
+      let firstDate = '';
+      let lastDate = '';
+      for (let w of actGroup.weeks) {
+        if (w.sessions && w.sessions.length) { firstDate = w.sessions[0].date; break; }
+      }
+      for (let wi = actGroup.weeks.length - 1; wi >= 0; wi--) {
+        const w = actGroup.weeks[wi];
+        if (w.sessions && w.sessions.length) { lastDate = w.sessions[w.sessions.length - 1].date; break; }
+      }
+      if (!firstDate) return '';
+      if (!lastDate || firstDate === lastDate) return formatDateLabel(firstDate);
+      return `${formatDateLabel(firstDate)} — ${formatDateLabel(lastDate)}`;
+    }
+
+    function monthShortFromMM(mm) {
+      const map = { '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+      return map[mm] || mm;
+    }
+    function monthFromDateStr(dateStr) {
+      // Expect "Tue, 09/02"
+      if (!dateStr) return '';
+      const m = dateStr.match(/,\s*(\d{2})\//);
+      return m ? monthShortFromMM(m[1]) : '';
+    }
+    function actMonthRangeLabel(actGroup) {
+      if (!actGroup || !Array.isArray(actGroup.weeks)) return '';
+      let firstDate = '';
+      let lastDate = '';
+      for (let w of actGroup.weeks) {
+        if (w.sessions && w.sessions.length) { firstDate = w.sessions[0].date; break; }
+      }
+      for (let wi = actGroup.weeks.length - 1; wi >= 0; wi--) {
+        const w = actGroup.weeks[wi];
+        if (w.sessions && w.sessions.length) { lastDate = w.sessions[w.sessions.length - 1].date; break; }
+      }
+      if (!firstDate) return '';
+      const m1 = monthFromDateStr(firstDate);
+      const m2 = monthFromDateStr(lastDate || firstDate);
+      return m1 && m2 ? (m1 === m2 ? m1 : `${m1}–${m2}`) : '';
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function renderSchedule(filter = '') {
+      $sched.innerHTML = '';
+      const filterLower = filter.toLowerCase();
+
+      let sessionSequential = 3; // global session counter across all acts/weeks (first visible is S3)
+
+      DATA.sessions.forEach((actGroup, actIdx) => {
+        const actDetails = document.createElement('details');
+        actDetails.className = 'act-details';
+        actDetails.id = `act-${actIdx}`;
+
+        const actSummary = document.createElement('summary');
+        const actTitle = cleanActTitle(actGroup.act);
+        const actRange = actRangeLabel(actGroup) || actGroup.range || '';
+        const actMonths = actMonthRangeLabel(actGroup);
+        const meta = [actMonths, actRange].filter(Boolean).join(' — ');
+        const actId = `ACT${actIdx + 1}`;
+        // Remove redundant Act pill; keep ACT id chip + clean title; move date meta to right as a pill
+        actSummary.innerHTML = `<div class="summary-row"><span class="id-chip">${actId}</span><span class="summary-title"><strong>${cleanHtml(actTitle)}</strong></span>${meta ? `<span class="summary-meta"><span class="pill">${meta}</span></span>` : ''}</div>`;
+        actDetails.appendChild(actSummary);
+
+        const actContent = document.createElement('div');
+        actContent.style.padding = '0 12px 12px'; // Match details-content padding
+        actContent.innerHTML = `
+          <p class="meta" style="margin-top:10px;">Stakes: ${cleanHtml(actGroup.stakes)}</p>
+          <p class="meta">Core Idea: ${cleanHtml(actGroup.core)}</p>
+          <p class="meta">Your Task: ${cleanHtml(actGroup.task)}</p>
+        `;
+        // Removed appending actContent to actDetails directly here, will re-add if any weeks are visible
+
+        let hasVisibleWeeksInAct = false;
+
+        actGroup.weeks.forEach((weekItem, weekIdx) => {
+          const weekDetails = document.createElement('details');
+          weekDetails.className = 'week-details';
+          weekDetails.id = `act-${actIdx}-week-${weekIdx}`;
+
+          const weekSummary = document.createElement('summary');
+          const weekIdShort = `W${pad2(weekItem.num)}`;
+          weekSummary.innerHTML = `<div class="summary-row"><span class="id-chip">${weekIdShort}</span><span class="summary-title"><strong>${weekItem.title}</strong></span><span class="summary-meta"><span class="pill">${weekRangeLabel(weekItem)}</span></span></div>`;
+          weekDetails.appendChild(weekSummary);
+
+          const weekContent = document.createElement('div');
+          weekContent.style.padding = '0 12px 12px'; // Match details-content padding
+          weekContent.innerHTML = `
+            <p class="meta" style="margin-top:10px;">Focus: ${cleanHtml(weekItem.focus)}</p>
+            <p class="meta">Theme: ${cleanHtml(weekItem.theme)}</p>
+            <p class="meta accent"><strong>Due:</strong> ${cleanHtml(weekItem.dueDate)}</p>
+            ${weekItem.additionalDue ? `<p class="meta accent"><strong>Also Due:</strong> ${cleanHtml(weekItem.additionalDue)}</p>` : ''}
+          `;
+          // Removed appending weekContent to weekDetails directly here, will re-add if any sessions are visible
+
+          let hasVisibleSessionsInWeek = false;
+
+          weekItem.sessions.forEach((sessionItem, sessionIdx) => {
+            const sessionHaystack = (actGroup.act + actGroup.range + weekItem.title + weekItem.focus + weekItem.theme + sessionItem.date + sessionItem.title + sessionItem.core + sessionItem.question + sessionItem.prompt + sessionItem.readings.map(r => r.label).join(' ') + (sessionItem.guests ? sessionItem.guests.join(' ') : '') + (sessionItem.notes || '')).toLowerCase();
+            
+            if (!filterLower || sessionHaystack.includes(filterLower)) {
+                hasVisibleSessionsInWeek = true;
+                const sessionDetails = document.createElement('details');
+                sessionDetails.className = 'session-details';
+                sessionDetails.id = `act-${actIdx}-week-${weekIdx}-session-${sessionIdx}`;
+
+                const sessionSummary = document.createElement('summary');
+                const weekIdShort = `W${pad2(weekItem.num)}`;
+                const sId = sessionSequential; // assign then increment
+                sessionItem._seq = sId;
+                const sessionIdShort = `S${sId}`;
+                sessionSequential++;
+                sessionSummary.innerHTML = `<div class="summary-row"><span class="id-chip">${weekIdShort}</span><span class="id-chip">${sessionIdShort}</span><span class=\"summary-title\"><strong>${cleanHtml(sessionItem.title)}</strong></span><span class=\"summary-meta\"><span class=\"pill\">${formatDateLabel(sessionItem.date)}</span></span></div>`;
+                sessionDetails.appendChild(sessionSummary);
+
+                const sessionInnerContent = document.createElement('div');
+                sessionInnerContent.style.padding = '0 12px 12px'; // Match details-content padding
+                sessionInnerContent.innerHTML = `
+                  <p class="meta" style="margin-top:10px;"><strong>Core:</strong> ${cleanHtml(sessionItem.core)}</p>
+                  <p class="meta"><strong>Key Question:</strong> ${cleanHtml(sessionItem.question)}</p>
+                  <p class="meta"><strong>Prompt:</strong> ${cleanHtml(sessionItem.prompt)}</p>
+                  <div class="grid" style="grid-template-columns:1fr; margin-top:12px;">
+                    ${sessionItem.readings.map(r => {
+                      const dlItem = DATA.dl.find(d => d.date === sessionItem.date && d.reading.startsWith(r.id));
+                      const dlBadge = dlItem ? `<span class="dl-initials-badge" data-dl-id="${dlItem.id}"></span>` : '';
+                      const hasLink = r.link && r.link !== '#';
+                      const sessionIdShort = `S${sessionItem._seq || 0}`;
+                      const ridSuffix = r.id; // e.g., A.1 or B.2
+                      const displayRid = `${sessionIdShort}.${ridSuffix}`;
+                      // Determine side using the composed ID (Sx.A.y) to be robust
+                      let sideLetter = '';
+                      if (displayRid.includes('.A.')) sideLetter = 'A';
+                      else if (displayRid.includes('.B.')) sideLetter = 'B';
+                      else if ((r.id||'').match(/(^|\.)A(\.|$)/)) sideLetter = 'A';
+                      else if ((r.id||'').match(/(^|\.)B(\.|$)/)) sideLetter = 'B';
+                      const sideClass = sideLetter === 'A' ? 'side-a' : (sideLetter === 'B' ? 'side-b' : '');
+                      const readerBtn = hasLink ? `<button class="icon-btn" title="Open in Reader" data-open-reader="1" data-url="${r.link}" data-title="${cleanHtml(r.label)}" data-rid="${displayRid}">⧉</button>` : '';
+                      const sidePill = sideLetter ? `<span class="side-pill ${sideLetter.toLowerCase()}">${sideLetter}</span>` : '';
+                      return `<div class="card reading-card ${sideClass}" style="padding:8px 10px; border:none; box-shadow:none; background: var(--bg-elev);">
+                                <div class="meta"><span class=\"id-chip ${sideClass}\">${displayRid}</span>${sidePill}</div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                  <a href="${r.link}" data-rid="${displayRid}" target="_blank" ${hasLink ? 'rel="noopener noreferrer"' : ''}><strong>${cleanHtml(r.label)}</strong></a>
+                                  ${readerBtn}${dlBadge}${hasLink ? externalLinkIcon : ''}
+                                </div>
+                              </div>`;
+                    }).join('')}
+                  </div>
+                `;
+                sessionDetails.appendChild(sessionInnerContent);
+                weekContent.appendChild(sessionDetails);
+            }
+          });
+          if (hasVisibleSessionsInWeek) {
+            hasVisibleWeeksInAct = true;
+            weekDetails.appendChild(weekContent);
+            actContent.appendChild(weekDetails);
+          }
+        });
+        if (hasVisibleWeeksInAct) {
+            actDetails.appendChild(actContent);
+            $sched.appendChild(actDetails);
+        }
+      });
+
+      // After rendering, populate DL initials badges from localStorage
+      document.querySelectorAll('.dl-initials-badge').forEach(span => {
+        const dlId = span.dataset.dlId;
+        if (dlId) {
+          span.textContent = localStorage.getItem(dlId) || '';
+        }
+      });
+
+      applyScheduleView(currentScheduleView); // Apply collapse/expand logic
+    }
+
+    function applyScheduleView(view) {
+      currentScheduleView = view;
+      localStorage.setItem('lmc2400_schedule_view', view);
+
+      document.querySelectorAll('.act-details').forEach(act => {
+        act.open = (view === 'act' || view === 'week' || view === 'session');
+        act.querySelectorAll('.week-details').forEach(week => {
+          week.open = (view === 'week' || view === 'session');
+          week.querySelectorAll('.session-details').forEach(session => {
+            session.open = (view === 'session');
+          });
+        });
+      });
+
+      // Update button active states
+      document.querySelectorAll('#schedule-view-buttons .btn').forEach(button => {
+        button.setAttribute('aria-pressed', (button.dataset.view === view).toString());
+      });
+    }
+
+    // Initial render
+    renderSchedule();
+    document.getElementById('schedule-view-buttons').addEventListener('click', (e) => {
+      const button = e.target.closest('.btn');
+      if (button && button.dataset.view) {
+        applyScheduleView(button.dataset.view);
+      }
+    });
+
+    // ==========================
+    // RENDER ASSIGNMENTS & POLICIES
+    // ==========================
+    const $assignContent = document.getElementById('assignments-content');
+    DATA.detailedAssignments.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3>${cleanHtml(a.title)}</h3>
+        <p><strong>${a.percentage}</strong> ${cleanHtml(a.description)}</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+          <button class="btn" data-copy="${a.title.split(':')[0]}">Copy ID</button>
+        </div>`;
+      $assignContent.appendChild(card);
+    });
+    $assignContent.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.copy) {
+        navigator.clipboard.writeText(b.dataset.copy);
+        b.textContent = 'Copied!';
+        setTimeout(() => b.textContent = 'Copy ID', 1200);
+      }
+    });
+
+    const $policiesContent = document.getElementById('policies-content');
+
+    function renderPolicyDetails(policyCategory, policyData) {
+        const details = document.createElement('details');
+        details.innerHTML = `
+            <summary>${cleanHtml(policyData.summary)}</summary>
+            <div style="padding: 0 12px 12px;">
+                ${cleanHtml(policyData.content)}
+            </div>
+        `;
+        $policiesContent.appendChild(details);
+    }
+
+    // Iterate through all policy categories in DATA.policies
+    for (const key in DATA.policies) {
+        if (DATA.policies.hasOwnProperty(key)) {
+            renderPolicyDetails(key, DATA.policies[key]);
+        }
+    }
+
+
+    // ==========================
+    // DISCUSSION LEADER (LOCAL STORAGE)
+    // ==========================
+    const $dlBody = document.querySelector('#dlTable tbody');
+    DATA.dl.forEach(row => {
+      const tr = document.createElement('tr');
+      const inputId = `dl-${row.id}`;
+      tr.innerHTML = `<td>${cleanHtml(row.date)}</td><td>${cleanHtml(row.reading)}</td><td>#${row.slot}</td><td><input id="${inputId}" class="dl-initials" maxlength="6" placeholder="e.g., WH" aria-label="Enter initials for ${row.reading}" /></td>`;
+      const input = tr.querySelector(`#${inputId}`);
+      input.value = localStorage.getItem(row.id) || '';
+      input.addEventListener('input', () => {
+        const value = input.value.trim();
+        localStorage.setItem(row.id, value);
+        // Update corresponding badge in the schedule view
+        document.querySelectorAll(`.dl-initials-badge[data-dl-id="${row.id}"]`).forEach(badge => {
+            badge.textContent = value;
+        });
+      });
+      $dlBody.appendChild(tr);
+    });
+
+    // ==========================
+    // SEARCH & KEYBOARD SHORTCUTS
+    // ==========================
+    const $q = document.getElementById('q');
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/') { e.preventDefault(); $q.focus(); }
+    });
+    $q.addEventListener('input', () => renderSchedule($q.value));
+
+    // ==========================
+    // NOTES
+    // ==========================
+    const $notes = document.getElementById('notes');
+    $notes.value = localStorage.getItem('lmc2400_notes') || '';
+    $notes.addEventListener('input', () => localStorage.setItem('lmc2400_notes', $notes.value));
+    document.getElementById('clearNotes').addEventListener('click', () => { if (confirm('Clear all your personal notes? This cannot be undone.')) { $notes.value = ''; localStorage.removeItem('lmc2400_notes'); } });
+    document.getElementById('exportNotes').addEventListener('click', () => {
+      const blob = new Blob([$notes.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'LMC2400_notes.txt';
+      a.click();
+    });
+
+    // ==========================
+    // FONT SIZE
+    // ==========================
+    const FONT_SCALE_KEY = 'lmc2400_font_scale';
+    function setRootFontSize(n) {
+      document.documentElement.style.setProperty('font-size', `${n}%`);
+      localStorage.setItem(FONT_SCALE_KEY, n);
+    }
+    setRootFontSize(parseInt(localStorage.getItem(FONT_SCALE_KEY) || '100', 10));
+    document.getElementById('fontInc').addEventListener('click', () => setRootFontSize(Math.min(130, (parseInt(localStorage.getItem(FONT_SCALE_KEY) || '100', 10) + 5))));
+    document.getElementById('fontDec').addEventListener('click', () => setRootFontSize(Math.max(85, (parseInt(localStorage.getItem(FONT_SCALE_KEY) || '100', 10) - 5))));
+
+    // MAIN HEADER DOTS + LAUNCHER
+    const $launcher = document.getElementById('launcher');
+    const $launcherSearch = document.getElementById('launcherSearch');
+    const $launcherCarrot = document.getElementById('launcherCarrot');
+    const $launcherClose = document.getElementById('launcherClose');
+    const $launcherRecents = document.getElementById('launcherRecents');
+    const $launcherMatches = document.getElementById('launcherMatches');
+    const $matchesHeader = document.getElementById('matchesHeader');
+
+    function showLauncher() {
+      $launcher.style.display = 'flex';
+      $launcherSearch.value = '';
+      setTimeout(()=> $launcherSearch.focus(), 0);
+      refreshRecents();
+      // Clear Matches on open
+      $matchesHeader.style.display='none';
+      $launcherMatches.innerHTML = '';
+      // Reset Apps visibility after prior search
+      document.querySelectorAll('#launcher .launcher-item[data-launch]').forEach(item=>{ item.style.display = ''; });
+    }
+    function hideLauncher() { $launcher.style.display = 'none'; }
+    function refreshRecents(filterText=''){
+      const keys = Object.keys(localStorage).filter(k=> k.startsWith('notes:S'));
+      if(keys.length===0){ $launcherRecents.textContent = 'Open readings to see them here.'; return; }
+      const q = (filterText||'').toLowerCase();
+      const items = keys.slice(-10).reverse().map(k=> k.slice(6));
+      const filtered = q ? items.filter(txt=> txt.toLowerCase().includes(q)) : items;
+      if(filtered.length===0){ $launcherRecents.textContent = 'No matches.'; return; }
+      $launcherRecents.innerHTML = filtered.slice(0,5).map(rid=> `<div class="launcher-item" data-open-rid="${rid}">${rid}</div>`).join('');
+    }
+    refreshRecents();
+
+    // 𓉗 glyph opens launcher
+    document.getElementById('launcherTrigger').addEventListener('click', showLauncher);
+
+    document.querySelector('.topbar .window-dots').addEventListener('click', (e)=>{
+      const dot = e.target.closest('[data-main-act]'); if(!dot) return;
+      const act = dot.getAttribute('data-main-act');
+      if(act==='close-all'){
+        document.querySelectorAll('.os-window').forEach(w=> w.remove());
+        document.getElementById('osDock')?.replaceChildren();
+      }
+      if(act==='launcher'){
+        showLauncher();
+      }
+      if(act==='workspace'){
+        // reserved for future workspace split; no-op for now
+      }
+    });
+
+    function jumpToRid(rid){
+      const a = document.querySelector(`a[data-rid="${rid}"]`);
+      if(!a){ alert('Could not find that reading on this page yet.'); return; }
+      let node = a;
+      while(node){
+        if(node.tagName && node.tagName.toLowerCase()==='details'){ node.open = true; }
+        node = node.parentElement;
+      }
+      const card = a.closest('.reading-card') || a;
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      card.classList.add('flash');
+      setTimeout(()=> card.classList.remove('flash'), 1200);
+      hideLauncher();
+    }
+
+    $launcher.addEventListener('click', (e)=>{
+      if(e.target===$launcher) { hideLauncher(); return; }
+      const match = e.target.closest('.launcher-item[data-jump-rid]');
+      if(match){ jumpToRid(match.getAttribute('data-jump-rid')); return; }
+      const recent = e.target.closest('.launcher-item[data-open-rid]');
+      if(recent){
+        const rid = recent.dataset.openRid;
+        const a = document.querySelector(`a[data-rid="${rid}"]`) || document.querySelector(`button[data-open-reader="1"][data-rid="${rid}"]`);
+        if(a){
+          const url = a.getAttribute('href') || a.getAttribute('data-url');
+          const title = (a.textContent || a.getAttribute('data-title') || '').trim();
+          openReader(url, title, rid); hideLauncher();
+        }
+        else { alert('Could not find that reading on this page yet.'); }
+        return;
+      }
+      const app = e.target.closest('.launcher-item[data-launch]');
+      if(app){
+        if(app.getAttribute('aria-disabled') === 'true') return;
+        const which = app.dataset.launch;
+        if(which==='reader'){
+          // Subtle tip on first use only could be added later; for now, just close
+          hideLauncher();
+        } else if(which==='syllabus'){
+          hideLauncher();
+        }
+      }
+    });
+    $launcherClose.addEventListener('click', hideLauncher);
+    // Minimal search: filters apps by label text and recents by RID
+    $launcherSearch.addEventListener('input', (e)=>{
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('#launcher .launcher-item[data-launch]').forEach(item=>{
+        const visible = item.textContent.toLowerCase().includes(q);
+        item.style.display = visible ? '' : 'none';
+      });
+      refreshRecents(q);
+      // Matches from all readings on page
+      if(q){
+        const anchors = Array.from(document.querySelectorAll('a[data-rid]'));
+        const results = [];
+        for(const a of anchors){
+          const rid = a.getAttribute('data-rid')||'';
+          const label = (a.textContent||'').trim();
+          if(rid.toLowerCase().includes(q) || label.toLowerCase().includes(q)){
+            results.push({rid, label, url:a.getAttribute('href')});
+            if(results.length>=5) break;
+          }
+        }
+        if(results.length){
+          $matchesHeader.style.display='';
+          $launcherMatches.innerHTML = results.map(r=> `<div class="launcher-item" data-jump-rid="${r.rid}">${r.rid} — ${r.label}</div>`).join('');
+        } else {
+          $matchesHeader.style.display='none';
+          $launcherMatches.innerHTML = '';
+        }
+      } else {
+        $matchesHeader.style.display='none';
+        $launcherMatches.innerHTML = '';
+      }
+    });
+    // Enter key: open first Match (navigate), else first Recent (open reader), else first visible App
+    $launcherSearch.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){
+        const firstMatch = document.querySelector('#launcherMatches .launcher-item[data-jump-rid]');
+        if(firstMatch){ firstMatch.click(); return; }
+        const firstRecent = document.querySelector('#launcherRecents .launcher-item[data-open-rid]');
+        if(firstRecent){ firstRecent.click(); return; }
+        const firstApp = Array.from(document.querySelectorAll('#launcher .launcher-item[data-launch]')).find(x=> x.style.display !== 'none' && x.getAttribute('aria-disabled')!== 'true');
+        if(firstApp){ firstApp.click(); }
+      }
+    });
+    // Carrot easter egg: open minimal chat panel
+    $launcherCarrot.style.opacity = '0.15';
+    $launcherCarrot.addEventListener('mouseover', ()=> $launcherCarrot.style.opacity = '0.3');
+    $launcherCarrot.addEventListener('mouseout', ()=> $launcherCarrot.style.opacity = '0.15');
+    $launcherCarrot.addEventListener('click', ()=> { openCarrotChat(); hideLauncher(); });
+    document.addEventListener('keydown', (e)=>{
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); showLauncher(); }
+      if(e.key==='Escape'){ hideLauncher(); }
+    });
+    /* In-page OS shell: minimal window manager */
+    (function(){
+      const inPageOS = true; // always available in this single-file build
+      const $body = document.body;
+      let zCounter = 100;
+
+      function ensureLayers(){
+        let layer = document.getElementById('osLayer');
+        if(!layer){
+          layer = document.createElement('div');
+          layer.id = 'osLayer';
+          layer.className = 'os-windows-layer';
+          $body.appendChild(layer);
+        }
+      }
+
+      function makeDraggable(win, handle){
+        let sx=0, sy=0, sl=0, st=0, dragging=false;
+        handle.addEventListener('mousedown', (e)=>{
+          if(e.target.closest('.window-dots')) return; // allow dots to click
+          dragging=true; sx=e.clientX; sy=e.clientY; const r=win.getBoundingClientRect(); sl=r.left; st=r.top; win.style.zIndex = (++zCounter).toString();
+          e.preventDefault();
+        });
+        window.addEventListener('mousemove',(e)=>{
+          if(!dragging) return; const dx=e.clientX-sx, dy=e.clientY-sy; win.style.left = Math.max(0, sl+dx) + 'px'; win.style.top = Math.max(48, st+dy) + 'px';
+        });
+        window.addEventListener('mouseup',()=> dragging=false);
+      }
+
+      function addDockItem(winId, title){
+        let dock = document.getElementById('osDock');
+        if(!dock){
+          dock = document.createElement('div');
+          dock.id = 'osDock';
+          dock.className = 'os-dock';
+          $body.appendChild(dock);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'dock-item';
+        btn.textContent = title || 'Window';
+        btn.dataset.win = winId;
+        btn.addEventListener('click',()=>{
+          const win = document.getElementById(winId);
+          if(!win) return;
+          win.style.display = 'block';
+          win.style.zIndex = (++zCounter).toString();
+          btn.remove();
+          if(dock.children.length === 0){ dock.remove(); }
+        });
+        dock.appendChild(btn);
+      }
+
+      function openReader(url, title, rid){
+        ensureLayers();
+        const layer = document.getElementById('osLayer');
+        const id = 'win_'+Math.random().toString(36).slice(2,8);
+        const win = document.createElement('div');
+        win.className = 'os-window';
+        win.id = id;
+        win.style.left = (80 + Math.random()*60) + 'px';
+        win.style.top = (80 + Math.random()*40) + 'px';
+        win.style.zIndex = (++zCounter).toString();
+        // load any saved notes
+        const NOTES_KEY = 'notes:' + (rid || url);
+        const saved = localStorage.getItem(NOTES_KEY) || '';
+        win.innerHTML = `
+          <div class="os-titlebar">
+            <div class="window-dots">
+              <span class="dot red" data-act="close"></span>
+              <span class="dot yellow" data-act="min"></span>
+              <span class="dot green" data-act="max"></span>
+            </div>
+            <div class="title">${title ? cleanHtml(title) : 'Reader'}${rid ? ' · '+rid : ''}</div>
+          </div>
+          <div class="os-content">
+            <div style="display:flex; flex-direction:column;">
+              <div style="display:flex; gap:6px; align-items:center; padding:6px; border-bottom:1px solid var(--border);">
+                <button class="icon-btn" data-act="open-tab" title="Open in New Tab">↗</button>
+                <button class="icon-btn" data-act="capture" title="Add Highlight (copy text, then click)">⧉</button>
+              </div>
+              <iframe src="${url}"></iframe>
+            </div>
+            <div class="os-notes">
+              <div class="meta" style="margin-bottom:6px;">Notes</div>
+              <textarea placeholder="Notes for ${title ? cleanHtml(title) : 'reading'}...">${saved.replace(/</g,'&lt;')}</textarea>
+            </div>
+          </div>`;
+        layer.appendChild(win);
+
+        const titlebar = win.querySelector('.os-titlebar');
+        makeDraggable(win, titlebar);
+
+        const notesEl = win.querySelector('textarea');
+        // Seed notes key if missing so Recents shows immediately
+        if(localStorage.getItem(NOTES_KEY) === null){
+          localStorage.setItem(NOTES_KEY, notesEl.value || '');
+          try{ refreshRecents(); }catch(_){/* launcher may not exist on other pages */}
+        }
+        notesEl.addEventListener('input', ()=>{
+          localStorage.setItem(NOTES_KEY, notesEl.value);
+          try{ refreshRecents(); }catch(_){ }
+        });
+
+        // wire titlebar dots
+        titlebar.addEventListener('click',(e)=>{
+          const btn = e.target.closest('.dot'); if(!btn) return;
+          const act = btn.dataset.act;
+          if(act==='close'){ win.remove(); }
+          if(act==='min'){ win.style.display='none'; }
+          if(act==='max'){ win.classList.toggle('max'); }
+        });
+
+        // wire toolbar actions
+        win.querySelector('[data-act="open-tab"]').addEventListener('click', ()=>{
+          window.open(url, '_blank', 'noopener');
+        });
+        win.querySelector('[data-act="capture"]').addEventListener('click', async ()=>{
+          try {
+            const text = await navigator.clipboard.readText();
+            if(text){
+              const ts = new Date().toISOString();
+              notesEl.value += `\n\n> ${text}\n— ${title||url} (${rid||''}) @ ${ts}`;
+              localStorage.setItem(NOTES_KEY, notesEl.value);
+              refreshRecents();
+            }
+          } catch(err){
+            alert('Copy text in the reader first, then click Add Highlight.');
+          }
+        });
+
+        return id;
+      }
+
+      function openCarrotChat(){
+        ensureLayers();
+        const layer = document.getElementById('osLayer');
+        const id = 'win_'+Math.random().toString(36).slice(2,8);
+        const win = document.createElement('div');
+        win.className = 'os-window';
+        win.id = id;
+        win.style.left = 'calc(100vw - 380px)';
+        win.style.top = '72px';
+        win.style.width = '340px';
+        win.style.zIndex = (++zCounter).toString();
+        win.innerHTML = `
+          <div class="os-titlebar">
+            <div class="window-dots">
+              <span class="dot red" data-act="close"></span>
+              <span class="dot yellow" data-act="min"></span>
+              <span class="dot green" data-act="max"></span>
+            </div>
+            <div class="title">Stochastic Carrot</div>
+          </div>
+          <div class="os-content" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="meta" style="padding:8px; border-bottom:1px solid var(--border);">hello! i'm the stochastic carrot 🥕 — a tiny, curious chat companion. minimal. optional. easter-egg. i can riff on readings, help you find sessions, or summarize your notes.</div>
+            <div style="padding:8px; display:flex; flex-direction:column; gap:6px;">
+              <button class="btn" data-carrot="suggest">suggest a reading path</button>
+              <button class="btn" data-carrot="recap">recap my latest notes</button>
+              <button class="btn" data-carrot="find">find a session by keyword</button>
+            </div>
+          </div>`;
+        layer.appendChild(win);
+        const titlebar = win.querySelector('.os-titlebar');
+        makeDraggable(win, titlebar);
+        titlebar.addEventListener('click',(e)=>{
+          const btn = e.target.closest('.dot'); if(!btn) return;
+          const act = btn.dataset.act;
+          if(act==='close'){ win.remove(); }
+          if(act==='min'){ win.style.display='none'; }
+          if(act==='max'){ win.classList.toggle('max'); }
+        });
+        win.addEventListener('click',(e)=>{
+          const b = e.target.closest('[data-carrot]'); if(!b) return;
+          const kind = b.getAttribute('data-carrot');
+          alert(`(mock) carrot would ${kind} here — keeping it minimal for now.`);
+        });
+        return id;
+      }
+
+      // Delegate reader icon clicks (links keep opening in new tab by default)
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-open-reader="1"]');
+        if(!btn) return;
+        e.preventDefault();
+        openReader(btn.dataset.url, btn.dataset.title, btn.dataset.rid);
+      });
+    })();
+  </script>
+</body>
+</html>
