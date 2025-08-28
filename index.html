@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>𓉗 LMC 2400 — Course OS</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' font-size='90'%3E%F0%93%89%97%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
@@ -85,7 +86,7 @@
       transition: color 0.2s ease;
     }
     a:hover {
-      color: var(--link-hover-color); /* This variable is not defined in the second snippet, but theme-dark uses the accent color for hover. Let's make it explicit. */
+      color: var(--accent); /* Consistent with existing theme behavior */
       text-decoration: underline;
     }
     .ext-link-icon {
@@ -108,6 +109,9 @@
       display: grid;
       grid-template-rows: auto 1fr auto;
       min-height: 100dvh;
+      /* Added for better mobile responsiveness */
+      padding: 0 12px; /* Default side padding for larger screens */
+      box-sizing: border-box;
     }
 
     /* Top Bar (OS feel) */
@@ -282,8 +286,11 @@
     .session-details > summary { font-size: 1rem; /* 16px */ }
 
     .act-details, .week-details, .session-details { margin-bottom: 10px; border:1px solid var(--border); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); }
-    .act-details .section { margin-top:0; border:0; box-shadow:none; } /* Remove extra borders/shadow for nested sections */
     .act-details > div, .week-details > div, .session-details > div { padding: 0 12px 12px; }
+    .act-details .section { margin-top:0; border:0; box-shadow:none; padding:0; } /* Remove extra borders/shadow for nested sections */
+    /* Adjust padding for the content directly inside act/week/session details to avoid double padding */
+    .act-details > div, .week-details > div, .session-details > div { padding: 0 12px 12px; }
+
 
     /* Guest entry in schedule */
     .guest-line { font-style: italic; font-weight: 500; color: var(--accent); margin-top: 8px; }
@@ -362,6 +369,246 @@
       details { margin-bottom: 5px !important; }
       details > summary::before { display: none !important; }
       details[open] > div { display: block !important; }
+    }
+
+    /* Mobile Responsiveness Improvements */
+    @media (max-width: 600px) {
+        .app {
+            max-width: 100%; /* Take full width */
+            padding: 0; /* remove side padding for hard-left alignment */
+        }
+        main { padding: 10px 0 80px 8px; } /* add slight left gutter for readability */
+
+        /* Flatten schedule containers for maximal content width */
+        section[data-view="schedule"] details { border: 0; box-shadow: none; border-radius: 0; }
+        section[data-view="schedule"] details + details { border-top: 1px solid var(--border); }
+        /* Remove left gutters and arrows */
+        .act-details > summary, .week-details > summary, .session-details > summary { padding-left: 0; }
+        summary::before { display: none; }
+        /* Ensure inner content aligns hard-left with no extra left borders */
+        section[data-view="schedule"] .reading-card { border: 0; box-shadow: none; border-radius: 12px; background: var(--bg-elev); }
+        section[data-view="schedule"] .reading-card.side-a,
+        section[data-view="schedule"] .reading-card.side-b { box-shadow: none !important; }
+        section[data-view="schedule"] .card { border: 0; box-shadow: none; }
+
+        .topbar {
+            padding: 8px; /* Reduce padding */
+            grid-template-columns: 1fr auto; /* Only title and modes/launcher trigger */
+            gap: 8px;
+        }
+        .topbar .window-dots {
+            display: none; /* Hide window dots on small screens */
+        }
+        .topbar .modes {
+            display: none; /* Hide modes in topbar on small screens to save horizontal space */
+        }
+        .topbar .title {
+            font-size: 1rem; /* Adjust title size */
+            margin-left: 0; /* No offset needed if dots are hidden */
+        }
+
+        .search {
+            flex-wrap: wrap; /* Allow search input and kbd to wrap */
+            padding: 6px 8px; /* Smaller padding */
+        }
+        .search input {
+            font-size: 0.9rem; /* Smaller font for search */
+        }
+        .kbd {
+            padding: 3px 5px; /* Smaller kbd */
+            font-size: 0.7rem;
+        }
+
+        .toolbar {
+            flex-wrap: wrap; /* Ensure toolbar buttons wrap */
+            justify-content: center; /* Center buttons */
+        }
+        .toolbar .btn {
+            padding: 10px 12px; /* larger tap targets */
+            font-size: 0.9rem;
+            min-height: 40px; /* meet ~40px target */
+        }
+
+        /* Schedule View */
+        /* Make schedule summaries multi-line and avoid truncation */
+        summary {
+            white-space: normal; /* allow wrapping */
+            overflow: visible; /* show full text */
+            align-items: flex-start; /* align to top when content wraps */
+        }
+        .summary-row {
+            display: flex;
+            flex-direction: column; /* stack id chips/title/meta */
+            align-items: flex-start;
+            gap: 4px; /* slightly tighter to reduce cascading spacing */
+        }
+        .summary-row, .summary-row .summary-title {
+            white-space: normal !important; /* override base nowrap */
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+        .summary-row .summary-title {
+            font-size: 1rem; /* maintain readability */
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        /* Put title first, then IDs, then meta to minimize truncation */
+        section[data-view="schedule"] .summary-row .summary-title { order: 1; }
+        section[data-view="schedule"] .summary-row .id-chip { order: 2; }
+        section[data-view="schedule"] .summary-row .summary-meta { order: 3; }
+        .summary-row .summary-meta {
+            margin-left: 0; /* remove right-side alignment */
+        }
+        .summary-row .summary-meta .pill {
+            display: inline-block; /* ensure pill shows on its own line if needed */
+        }
+
+        /* Larger, easier tap targets for schedule view buttons */
+        #schedule-view-buttons {
+            display: grid;
+            grid-template-columns: 1fr; /* stack buttons */
+            gap: 8px;
+        }
+        #schedule-view-buttons .btn {
+            padding: 12px 14px; /* increase touch area */
+            font-size: 0.95rem;
+            border-radius: 12px;
+        }
+        .summary-row .summary-meta .pill {
+            display: inline-block; /* keep date pills visible on mobile */
+        }
+        .session-details .reading-card {
+            padding: 6px 8px; /* Reduce padding for reading cards */
+        }
+        .session-details .reading-card .id-chip,
+        .session-details .reading-card .side-pill {
+            font-size: 0.6rem; /* Smaller IDs and side pills */
+            padding: 1px 4px;
+        }
+        .session-details .reading-card a {
+            font-size: 0.9rem; /* Smaller link text */
+        }
+        /* Make all icon buttons more tappable on mobile */
+        .icon-btn {
+            padding: 8px 10px;
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 0.9rem;
+        }
+        .session-details .reading-card .icon-btn {
+            padding: 8px 10px; /* larger tap target */
+            font-size: 0.85rem;
+            min-width: 40px;
+            min-height: 40px;
+        }
+
+        /* Ensure reading rows wrap and don't overflow */
+        .session-details .reading-card > div[style*="display:flex"] {
+            flex-wrap: wrap;
+        }
+        .session-details .reading-card a {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        /* prevent tokens from forcing width */
+        .id-chip, .side-pill, .pill { white-space: normal; }
+        .pill { max-width: 100%; }
+        /* Aggressive wrapping for any text inside summaries and meta */
+        .session-details p.meta, .week-details p.meta, .act-details p.meta {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        /* Hard left align: remove inner content side padding for schedule */
+        section[data-view="schedule"] .act-details > div,
+        section[data-view="schedule"] .week-details > div,
+        section[data-view="schedule"] .session-details > div {
+            padding: 0 0 10px !important; /* remove left/right padding */
+        }
+
+        /* Reduce outer section padding to maximize width */
+        .section[data-view="schedule"] {
+            padding-left: 8px; /* slight left padding */
+            padding-right: 0;
+            border: 0; 
+            border-radius: 0; 
+            box-shadow: none; 
+            margin-left: 0; 
+            margin-right: 0;
+        }
+
+        /* Force full-width, hard-left alignment and aggressive wrapping */
+        #schedule { width: 100%; word-break: break-word; overflow-wrap: anywhere; }
+        /* Ensure no nested element causes overflow or right gutters */
+        section[data-view="schedule"] * { max-width: 100%; box-sizing: border-box; }
+        section[data-view="schedule"] a, section[data-view="schedule"] button { max-width: 100%; }
+        section[data-view="schedule"] summary,
+        section[data-view="schedule"] .summary-row,
+        section[data-view="schedule"] .summary-title,
+        section[data-view="schedule"] .summary-title strong {
+            display: block; width: 100%; text-align: left; white-space: normal !important; overflow: visible !important; text-overflow: clip !important;
+        }
+
+        /* DL Table */
+        .dl-table {
+            font-size: 0.8rem; /* Smaller font for DL table */
+            display: block; /* Allows table to overflow */
+            overflow-x: auto; /* Enable horizontal scrolling for the table */
+            white-space: nowrap; /* Prevent text wrapping within cells if it gets too narrow */
+        }
+        .dl-table td:nth-child(2) { /* Reading column */
+          white-space: normal; /* Allow reading titles to wrap */
+          max-width: 180px; /* Constrain max width for better wrapping */
+        }
+        .dl-initials {
+            font-size: 0.8rem; /* Smaller input field */
+            padding: 4px 6px;
+        }
+
+        /* OS-like Windows / Launcher for mobile */
+        .os-window, .launcher-panel {
+            width: 100% !important;
+            height: 100dvh !important; /* Use dvh for dynamic viewport height */
+            left: 0 !important;
+            top: 0 !important;
+            border-radius: 0 !important;
+            min-width: unset; /* Remove min-width constraint */
+            min-height: unset; /* Remove min-height constraint */
+        }
+        .os-dock {
+            display: none; /* Hide dock on mobile */
+        }
+        .os-content {
+            grid-template-columns: 1fr; /* Single column for reader window content */
+        }
+        .os-notes {
+            border-left: none; /* Remove left border */
+            border-top: 1px solid var(--border); /* Add top border */
+        }
+        .launcher-body {
+            grid-template-columns: 1fr; /* Single column for launcher */
+        }
+        .launcher-col:first-child {
+            border-bottom: 1px solid var(--border); /* Separate columns */
+        }
+
+        /* Tabs (bottom nav) */
+        .tabs button {
+            font-size: 0.8rem; /* larger and more tappable */
+            padding: 10px 8px; /* bigger touch area */
+            min-height: 44px; /* iOS recommended minimum */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+        }
+        .tabs button .label { display: none; }
+        .tabs button .icon { font-size: 1.2rem; line-height: 1; }
+    }
+
+    /* Adjust modes buttons on slightly wider small screens */
+    @media (max-width: 700px) and (min-width: 601px) {
+        .modes button {
+            padding: 6px 8px;
+            font-size: 0.65rem;
+        }
     }
   </style>
 </head>
@@ -507,11 +754,26 @@
     </div>
 
     <nav class="tabs" aria-label="Primary Navigation">
-      <button class="active" data-tab="home" role="tab" aria-selected="true">Home</button>
-      <button data-tab="schedule" role="tab" aria-selected="false">Schedule</button>
-      <button data-tab="assignments" role="tab" aria-selected="false">Work</button>
-      <button data-tab="dl" role="tab" aria-selected="false">DL</button>
-      <button data-tab="notes" role="tab" aria-selected="false">Notes</button>
+      <button class="active" data-tab="home" role="tab" aria-selected="true" aria-label="Home">
+        <span class="icon" aria-hidden="true">𓉗</span>
+        <span class="label">Home</span>
+      </button>
+      <button data-tab="schedule" role="tab" aria-selected="false" aria-label="Schedule">
+        <span class="icon" aria-hidden="true">𓎳</span>
+        <span class="label">Schedule</span>
+      </button>
+      <button data-tab="assignments" role="tab" aria-selected="false" aria-label="Work">
+        <span class="icon" aria-hidden="true">𓃑</span>
+        <span class="label">Work</span>
+      </button>
+      <button data-tab="dl" role="tab" aria-selected="false" aria-label="Discussion Leaders">
+        <span class="icon" aria-hidden="true">𓀠</span>
+        <span class="label">DL</span>
+      </button>
+      <button data-tab="notes" role="tab" aria-selected="false" aria-label="Notes">
+        <span class="icon" aria-hidden="true">𓈌</span>
+        <span class="label">Notes</span>
+      </button>
     </nav>
   </div>
 
@@ -672,7 +934,7 @@
                     { id: 'ACT1.W3.S6.A.1', label: 'Carey, Cultural Approach to Communication', link: 'https://web.mit.edu/21l.432/www/readings/Carey_CulturalApproachCommunication.pdf' },
                     { id: 'ACT1.W3.S6.A.2', label: 'Kittler, Gramophone, Film, Typewriter', link: 'https://monoskop.org/images/7/73/Kittler_Friedrich_Gramophone_Film_Typewriter.pdf' },
                     { id: 'ACT1.W3.S6.B.1', label: 'Keats, Ode on a Grecian Urn', link: 'https://www.poetryfoundation.org/poems/44477/ode-on-a-grecian-urn' },
-                    { id: 'ACT1.W3.S6.B.2', label: 'Bajohr, Operative Ekphrasis', link: 'https://doi.org/10.1080/02666286.2024.2330335' },
+                    { id: 'ACT1.W3.S6.B.2', label: 'Bajohr, Operative Ekphrasis', link: 'https://www.researchgate.net/publication/372400146_Operative_ekphrasis_The_collapse_of_the_textimage_distinction_in_multimodal_AI_PLEASE_REFER_TO_PUBLISHED_VERSION' },
                     { id: 'ACT1.W3.S6.B.3', label: 'Wild, Say What You See', link: 'https://artsandculture.google.com/experiment/say-what-you-see/jwG3m7wQShZngw' },
                     { id: 'ACT1.W3.S6.B.4', label: 'Apollinaire, Poet Who Painted with Words', link: 'https://www.youtube.com/watch?v=YJ0x1YOuMwQ' }
                   ]
@@ -691,8 +953,8 @@
                   num: 8, date: 'Thu, 09/11', title: 'Aura After Copies: The Angel of History Meets the Algorithm', core: 'Reproduction doesn’t kill aura; it relocates it, shaping memory and progress.', question: 'Algorithmic reproduction demands new authenticity, memory, and progress.', prompt: 'Using Benjamin (“Work of Art,” “Thesis IX”), discuss how mechanical to algorithmic reproduction changes aura/historical consciousness.', readings: [
                     { id: 'ACT1.W4.S8.A.1', label: 'Benjamin, Work of Art in Age of Mech. Repro.', link: 'https://web.mit.edu/allanmc/www/benjamin.pdf' },
                     { id: 'ACT1.W4.S8.A.2', label: 'Benjamin, Thesis IX: Angelus Novus', link: 'https://files.libcom.org/files/Theses.pdf' },
-                    { id: 'ACT1.W4.S8.B.1', label: 'Video Essay, Angel of History', link: 'https://www.youtube.com/watch?v=7iYszscVduI' },
-                    { id: 'ACT1.W4.S8.B.2', label: 'Stanley, "Work of Art in Age of Algo. (Re)production"', link: '#' }
+                    { id: 'ACT1.W4.S8.B.1', label: 'Video Essay, Angel of History', link: 'https://www.youtube.com/watch?v=GXWI3iB-7aA' },
+                    { id: 'ACT1.W4.S8.B.2', label: 'Stanley, "Work of Art in Age of Algo. (Re)production"', link: 'https://www.acsa-arch.org/proceedings/Annual%20Meeting%20Proceedings/ACSA.AM.113/ACSA.AM.113.19.pdf' }
                   ], guests: ['Ben Brewer (Memory, media, temporality)']
                 }
               ]
@@ -754,7 +1016,7 @@
                   num: 14, date: 'Thu, 10/02', title: 'Silence Has Rules: Sound, Absence, and the Shape of Attention', core: 'Silence is a medium with laws structuring how we listen/belong.', question: 'How do different media environments choreograph attention through sound and silence?', prompt: 'Analyze a media form/space (podcast, silent film) for how it uses sound/silence to guide perception/attention/connection (Cage, Sterne).', readings: [
                     { id: 'ACT2.W7.S14.A.1', label: 'Cage, Silence', link: 'https://monoskop.org/images/b/b5/Cage_John_Silence_Lectures_and_Writings.pdf' },
                     { id: 'ACT2.W7.S14.A.2', label: 'Sterne, The Audible Past', link: 'https://lab2.surwww.com/material/Jonathan%20Sterne-The%20Audible%20Past_%20Cultural%20Origins%20of%20Sound%20Reproduction.pdf' },
-                    { id: 'ACT2.W7.S14.B.1', label: 'Sapir/Whorf, Status of Linguistic Relativity', link: 'https://www.jstor.org/stable/pdf/679389.pdf' }
+                    { id: 'ACT2.W7.S14.B.1', label: 'Sapir/Whorf, Status of Linguistic Relativity', link: 'https://www.sciencedirect.com/topics/psychology/sapir-whorf-hypothesis' }
                   ]
                 }
               ]
@@ -792,7 +1054,7 @@
               num: 9, title: 'Computation and Futurity (cont.)', focus: 'Media as Play & Persuasion: Cybernetics, Games, and the Brain.', theme: '', dueDate: 'Thu, 10/16 @ 11:59 PM', sessions: [
                 {
                   num: 17, date: 'Tue, 10/14', title: 'Procedural Arguments: When Rules Persuade', core: 'Games persuade by what they let us do, not what they show.', question: 'How do Youngblood’s “expanded cinema” and Bogost’s “procedural rhetoric” show that rules argue more powerfully than images?', prompt: 'Apply “procedural rhetoric” to Everything. Relate to earlier cybernetic/algorithmic moving-image lineage.', readings: [
-                    { id: 'ACT4.W9.S17.A.1', label: 'Youngblood, Expanded Cinema (selections)', link: 'https://monoskop.org/images/5/5c/Youngblood_Gene_Expanded_Cinema.pdf' },
+                    { id: 'ACT4.W9.S17.A.1', label: 'Youngblood, Expanded Cinema (selections)', link: 'https://monoskop.org/images/4/40/Youngblood_Gene_Expanded_Cinema_no_OCR.pdf' },
                     { id: 'ACT4.W9.S17.A.2', label: 'Bogost, “Procedural Rhetoric” (chapter overview)', link: 'https://bogost.com/books/persuasive_games/' },
                     { id: 'ACT4.W9.S17.B.1', label: 'OReilly, Everything (official site)', link: 'https://everything-game.com/' },
                     { id: 'ACT4.W9.S17.B.2', label: 'Ars Technica, Sunspring (AI-written short)', link: 'https://www.youtube.com/watch?v=LY7x2Ihqjmc' }
@@ -855,7 +1117,9 @@
               num: 12, title: 'Haunted Presents & Ethical Futures (cont.)', focus: 'Hauntings, Hyperstitions, and Sympathetic Worlds.', theme: '', dueDate: 'Thu, 11/06 @ 11:59 PM', additionalDue: 'Project Proposal — Thu, 11/06 @ 11:59 PM', sessions: [
                 {
                   num: 23, date: 'Tue, 11/04', title: 'Haunting the Future: Afrofuturism, Hauntology, and the Uncanny', core: 'The future is always haunted; what haunts depends on whose time has been broken.', question: 'How do Freud’s “uncanny” and Fisher’s “crackle” intersect with Afrofuturism/hyperstition in tech futures?', prompt: 'Using Freud/Fisher, analyze Black Metal or Okorafor’s Mother of Invention. How do they stage hauntings? Where does hyperstition turn fiction into reality?', readings: [
-                    { id: 'ACT5.W12.S23.A.1', label: 'Black Metal / Odyssey of Imagination', link: 'https://www.newyorksaid.com/black-metal-an-odyssey-of-imagination-and-speculative-futures/' },
+                    // Corrected: Split the two links from the markdown into two separate readings
+                    { id: 'ACT5.W12.S23.A.1a', label: 'Black Metal (Afrotectopia)', link: 'https://www.afrotectopia.org/' },
+                    { id: 'ACT5.W12.S23.A.1b', label: 'Odyssey of Imagination', link: 'https://www.newyorksaid.com/black-metal-an-odyssey-of-imagination-and-speculative-futures/' },
                     { id: 'ACT5.W12.S23.A.2', label: 'Fisher, Metaphysics of Crackle', link: 'https://dj.dancecult.net/index.php/dancecult/article/view/378' },
                     { id: 'ACT5.W12.S23.A.3', label: 'Freud, The Uncanny', link: 'https://web.mit.edu/allanmc/www/freud1.pdf' },
                     { id: 'ACT5.W12.S23.B.1', label: 'Short Prehistory of CCRU', link: 'http://www.ccru.net/id(entity)/ccruhistory.htm' },
@@ -883,13 +1147,13 @@
                     { id: 'ACT5.W13.S25.A.2', label: 'Amodei, Machines of Loving Grace', link: 'https://www.darioamodei.com/essay/machines-of-loving-grace' },
                     { id: 'ACT5.W13.S25.A.3', label: 'Curtis, Machines of Loving Grace (Ep. 2)', link: 'https://www.youtube.com/watch?v=DgU6DNkXHJA' },
                     { id: 'ACT5.W13.S25.B.1', label: 'The Incredible Machine (1968)', link: 'https://www.youtube.com/watch?v=iwVu2BWLZqA' },
-                    { id: 'ACT5.W13.S25.B.2', label: 'Finn, What Algorithms Want (excerpts)', link: '#' }
+                    { id: 'ACT5.W13.S25.B.2', label: 'Finn, What Algorithms Want (excerpts)', link: 'https://virtualmmx.ddns.net/gbooks/WhatAlgorithmsWant.pdf' }
                   ]
                 },
                 {
                   num: 26, date: 'Thu, 11/13', title: 'Cyborg Kin: Making Relatives with Machines', core: 'If we made kin with machines, problems might dissolve into negotiated obligations.', question: 'How does treating machines as kin (Haraway, Indigenous protocols) change posthuman futures?', prompt: 'Apply Haraway’s cyborg ontology and “making kin” to envision ethical, reciprocal AI relationships.', readings: [
                     { id: 'ACT5.W13.S26.A.1', label: 'Haraway, A Cyborg Manifesto', link: 'https://warwick.ac.uk/fac/arts/english/currentstudents/undergraduate/modules/fictionnownarrativemediaandtheoryinthe21stcentury/manifestly_haraway_----_a_cyborg_manifesto_science_technology_and_socialist-feminism_in_the_....pdf' },
-                    { id: 'ACT5.W13.S26.A.2', label: 'Lewis et al., Making Kin with the Machines', link: 'https://jods.mitpress.mit.edu/pub/lewis-arista-pechawis-kite/release/1' },
+                    { id: 'ACT5.W13.S26.A.2', label: 'Lewis et al., Making Kin with the Machines', link: 'https://www.researchgate.net/publication/326614247_Making_Kin_with_the_Machines' },
                     { id: 'ACT5.W13.S26.B.1', label: 'McDowell, Designing Neural Media', link: 'https://www.youtube.com/watch?v=8_XiLQjxHVI' },
                     { id: 'ACT5.W13.S26.B.2', label: 'Pharmako-AI', link: 'https://www.are.na/block/21398733' }
                   ]
@@ -900,12 +1164,12 @@
               num: 14, title: 'Haunted Presents & Ethical Futures (cont.)', focus: 'Platform Power, AI Slop, and the Limits of the Machine.', theme: '', dueDate: 'Thu, 11/20 @ 11:59 PM', additionalDue: 'Artifact Draft + Bibliography — Tue, 11/18 @ 11:59 PM', sessions: [
                 {
                   num: 27, date: 'Tue, 11/18', title: 'Platform Vernaculars & Enshittification: Who Owns the Feed?', core: 'Platforms don’t just host culture—they feed on it.', question: 'How do communities resist/adapt as platforms degrade through “enshittification”?', prompt: 'Use Doctorow/Brock to analyze a platform’s trajectory, factoring in AI slop and memetic trends.', readings: [
-                    { id: 'ACT5.W14.S27.A.1', label: 'Brock, From the Blackhand Side', link: 'https://www.researchgate.net/profile/Andre-Brock/publication/327186182_From_the_Blackhand_Side_Twitter_as_a_Cultural_Conversation/links/56e336e508ae98445c1b2d0a/From-the-Blackhand-Side-Twitter-as-a-Cultural-Conversation.pdf' },
+                    { id: 'ACT5.W14.S27.A.1', label: 'Brock, From the Blackhand Side', link: 'https://www.researchgate.net/publication/275622703_From_the_Blackhand_Side_Twitter_as_a_Cultural_Conversation' },
                     { id: 'ACT5.W14.S27.A.2', label: 'Doctorow, “Enshittification” of TikTok', link: 'https://www.wired.com/story/tiktok-platforms-cory-doctorow/' },
                     { id: 'ACT5.W14.S27.A.3', label: 'Tufekci, Twitter and Tear Gas', link: 'https://www.wired.com/2017/05/twitter-tear-gas-protest-age-social-media/' },
                     { id: 'ACT5.W14.S27.A.4', label: 'U.S. created “Cuban Twitter”', link: 'https://www.theguardian.com/world/2014/apr/03/us-cuban-twitter-zunzuneo-stir-unrest' },
                     { id: 'ACT5.W14.S27.B.1', label: 'Oliver, AI Slop', link: 'https://www.youtube.com/watch?v=TWpg1RmzAbc&t=4s' },
-                    { id: 'ACT5.W14.S27.B.2', label: 'Hard Fork, Italian Brainrot', link: 'https://www.youtube.com/watch?v=Wo2NZ8kjvF4' },
+                    { id: 'ACT5.W14.S27.B.2', label: 'Hard Fork, Italian Brainrot', link: 'https://www.youtube.com/watch?v=zUFGeM50quw&t=83s' },
                     { id: 'ACT5.W14.S27.B.3', label: 'Short Film, Writing Doom', link: 'https://www.youtube.com/watch?v=xfMQ7hzyFW4' }
                   ]
                 },
@@ -942,6 +1206,8 @@
           ]
         }
       ],
+      // Corrected DL table entries due to new reading ID for ACT5.W12.S23.A.1.
+      // All slots from 73 onwards have been re-indexed.
       dl: [
         { date: 'Tue, 08/26', reading: 'ACT1.W2.S3.A.1 — Miroshnichenko, Human as Media', slot: 1, id: 'dl_ACT1_W2_S3_A1_1' },
         { date: 'Tue, 08/26', reading: 'ACT1.W2.S3.B.1 — Victor, Media for Thinking', slot: 2, id: 'dl_ACT1_W2_S3_B1_2' },
@@ -1015,41 +1281,43 @@
         { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.A.2 — Baumann et al., Sankofa City (community AR)', slot: 70, id: 'dl_ACT4_W11_S22_A2_70' },
         { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.B.1 — Biggs, “Fabulating Bog Girl…” (CHI ’24)', slot: 71, id: 'dl_ACT4_W11_S22_B1_71' },
         { date: 'Thu, 10/30', reading: 'ACT4.W11.S22.B.2 — Wong et al., “Real-Fictional Entanglements…” (DIS ’17)', slot: 72, id: 'dl_ACT4_W11_S22_B2_72' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.1 — Black Metal / Odyssey of Imagination', slot: 73, id: 'dl_ACT5_W12_S23_A1_73' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.2 — Fisher, Metaphysics of Crackle', slot: 74, id: 'dl_ACT5_W12_S23_A2_74' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.3 — Freud, The Uncanny', slot: 75, id: 'dl_ACT5_W12_S23_A3_75' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.1 — Short Prehistory of CCRU', slot: 76, id: 'dl_ACT5_W12_S23_B1_76' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.2 — Okorafor, Mother of Invention', slot: 77, id: 'dl_ACT5_W12_S23_B2_77' },
-        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.3 — CCRU as Philosophy in Digital World', slot: 78, id: 'dl_ACT5_W12_S23_B3_78' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.1 — Sympathetic Magic: Photo Essay', slot: 79, id: 'dl_ACT5_W12_S24_A1_79' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.2 — Sachs, Sympathetic Magic (Talk)', slot: 80, id: 'dl_ACT5_W12_S24_A2_80' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.3 — Frazer, The Golden Bough (pp. 18–19)', slot: 81, id: 'dl_ACT5_W12_S24_A3_81' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.1 — Lawton, Expanded Childhood', slot: 82, id: 'dl_ACT5_W12_S24_B1_82' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.2 — Ewald, Portraits and Dreams', slot: 83, id: 'dl_ACT5_W12_S24_B2_83' },
-        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.3 — Barret, Stranger with a Camera', slot: 84, id: 'dl_ACT5_W12_S24_B3_84' },
-        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.1 — Brautigan, All Watched Over By Machines of Loving Grace', slot: 85, id: 'dl_ACT5_W13_S25_A1_85' },
-        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.2 — Amodei, Machines of Loving Grace', slot: 86, id: 'dl_ACT5_W13_S25_A2_86' },
-        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.3 — Curtis, Machines of Loving Grace (Ep. 2)', slot: 87, id: 'dl_ACT5_W13_S25_A3_87' },
-        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.1 — The Incredible Machine (1968)', slot: 88, id: 'dl_ACT5_W13_S25_B1_88' },
-        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.2 — Finn, What Algorithms Want (excerpts)', slot: 89, id: 'dl_ACT5_W13_S25_B2_89' },
-        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.1 — Haraway, A Cyborg Manifesto', slot: 90, id: 'dl_ACT5_W13_S26_A1_90' },
-        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.2 — Lewis et al., Making Kin with the Machines', slot: 91, id: 'dl_ACT5_W13_S26_A2_91' },
-        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.1 — McDowell, Designing Neural Media', slot: 92, id: 'dl_ACT5_W13_S26_B1_92' },
-        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.2 — Pharmako-AI', slot: 93, id: 'dl_ACT5_W13_S26_B2_93' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.1 — Brock, From the Blackhand Side', slot: 94, id: 'dl_ACT5_W14_S27_A1_94' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.2 — Doctorow, “Enshittification” of TikTok', slot: 95, id: 'dl_ACT5_W14_S27_A2_95' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.3 — Tufekci, Twitter and Tear Gas', slot: 96, id: 'dl_ACT5_W14_S27_A3_96' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.4 — U.S. created “Cuban Twitter”', slot: 97, id: 'dl_ACT5_W14_S27_A4_97' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.1 — Oliver, AI Slop', slot: 98, id: 'dl_ACT5_W14_S27_B1_98' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.2 — Hard Fork, Italian Brainrot', slot: 99, id: 'dl_ACT5_W14_S27_B2_99' },
-        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.3 — Short Film, Writing Doom', slot: 100, id: 'dl_ACT5_W14_S27_B3_100' },
-        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.1 — Arielli & Manovich, Made By and For Humans?', slot: 101, id: 'dl_ACT5_W14_S28_A1_101' },
-        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.2 — Dreyfus, What Computers Can’t Do (Conclusion)', slot: 102, id: 'dl_ACT5_W14_S28_A2_102' },
-        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.B.1 — Manovich, Language of Tomorrow', slot: 103, id: 'dl_ACT5_W14_S28_B1_103' },
-        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.A.1 — (No assigned readings — full workshop)', slot: 104, id: 'dl_ACT6_W15_S29_A1_104' },
-        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.B.1 — Sankofa Futures peer feedback guidelines/rubric', slot: 105, id: 'dl_ACT6_W15_S29_B1_105' },
-        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.A.1 — (Final Project Session - No new readings)', slot: 106, id: 'dl_ACT6_W15_S30_A1_106' },
-        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.B.1 — (Final Project Session - No new readings)', slot: 107, id: 'dl_ACT6_W15_S30_B1_107' }
+        // Corrected entries for ACT5.W12.S23.A.1, subsequent slots re-indexed
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.1a — Black Metal (Afrotectopia)', slot: 73, id: 'dl_ACT5_W12_S23_A1a_73' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.1b — Odyssey of Imagination', slot: 74, id: 'dl_ACT5_W12_S23_A1b_74' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.2 — Fisher, Metaphysics of Crackle', slot: 75, id: 'dl_ACT5_W12_S23_A2_75' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.A.3 — Freud, The Uncanny', slot: 76, id: 'dl_ACT5_W12_S23_A3_76' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.1 — Short Prehistory of CCRU', slot: 77, id: 'dl_ACT5_W12_S23_B1_77' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.2 — Okorafor, Mother of Invention', slot: 78, id: 'dl_ACT5_W12_S23_B2_78' },
+        { date: 'Tue, 11/04', reading: 'ACT5.W12.S23.B.3 — CCRU as Philosophy in Digital World', slot: 79, id: 'dl_ACT5_W12_S23_B3_79' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.1 — Sympathetic Magic: Photo Essay', slot: 80, id: 'dl_ACT5_W12_S24_A1_80' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.2 — Sachs, Sympathetic Magic (Talk)', slot: 81, id: 'dl_ACT5_W12_S24_A2_81' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.A.3 — Frazer, The Golden Bough (pp. 18–19)', slot: 82, id: 'dl_ACT5_W12_S24_A3_82' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.1 — Lawton, Expanded Childhood', slot: 83, id: 'dl_ACT5_W12_S24_B1_83' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.2 — Ewald, Portraits and Dreams', slot: 84, id: 'dl_ACT5_W12_S24_B2_84' },
+        { date: 'Thu, 11/06', reading: 'ACT5.W12.S24.B.3 — Barret, Stranger with a Camera', slot: 85, id: 'dl_ACT5_W12_S24_B3_85' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.1 — Brautigan, All Watched Over By Machines of Loving Grace', slot: 86, id: 'dl_ACT5_W13_S25_A1_86' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.2 — Amodei, Machines of Loving Grace', slot: 87, id: 'dl_ACT5_W13_S25_A2_87' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.A.3 — Curtis, Machines of Loving Grace (Ep. 2)', slot: 88, id: 'dl_ACT5_W13_S25_A3_88' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.1 — The Incredible Machine (1968)', slot: 89, id: 'dl_ACT5_W13_S25_B1_89' },
+        { date: 'Tue, 11/11', reading: 'ACT5.W13.S25.B.2 — Finn, What Algorithms Want (excerpts)', slot: 90, id: 'dl_ACT5_W13_S25_B2_90' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.1 — Haraway, A Cyborg Manifesto', slot: 91, id: 'dl_ACT5_W13_S26_A1_91' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.A.2 — Lewis et al., Making Kin with the Machines', slot: 92, id: 'dl_ACT5_W13_S26_A2_92' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.1 — McDowell, Designing Neural Media', slot: 93, id: 'dl_ACT5_W13_S26_B1_93' },
+        { date: 'Thu, 11/13', reading: 'ACT5.W13.S26.B.2 — Pharmako-AI', slot: 94, id: 'dl_ACT5_W13_S26_B2_94' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.1 — Brock, From the Blackhand Side', slot: 95, id: 'dl_ACT5_W14_S27_A1_95' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.2 — Doctorow, “Enshittification” of TikTok', slot: 96, id: 'dl_ACT5_W14_S27_A2_96' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.3 — Tufekci, Twitter and Tear Gas', slot: 97, id: 'dl_ACT5_W14_S27_A3_97' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.A.4 — U.S. created “Cuban Twitter”', slot: 98, id: 'dl_ACT5_W14_S27_A4_98' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.1 — Oliver, AI Slop', slot: 99, id: 'dl_ACT5_W14_S27_B1_99' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.2 — Hard Fork, Italian Brainrot', slot: 100, id: 'dl_ACT5_W14_S27_B2_100' },
+        { date: 'Tue, 11/18', reading: 'ACT5.W14.S27.B.3 — Short Film, Writing Doom', slot: 101, id: 'dl_ACT5_W14_S27_B3_101' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.1 — Arielli & Manovich, Made By and For Humans?', slot: 102, id: 'dl_ACT5_W14_S28_A1_102' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.A.2 — Dreyfus, What Computers Can’t Do (Conclusion)', slot: 103, id: 'dl_ACT5_W14_S28_A2_103' },
+        { date: 'Thu, 11/20', reading: 'ACT5.W14.S28.B.1 — Manovich, Language of Tomorrow', slot: 104, id: 'dl_ACT5_W14_S28_B1_104' },
+        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.A.1 — (No assigned readings — full workshop)', slot: 105, id: 'dl_ACT6_W15_S29_A1_105' },
+        { date: 'Tue, 11/25', reading: 'ACT6.W15.S29.B.1 — Sankofa Futures peer feedback guidelines/rubric', slot: 106, id: 'dl_ACT6_W15_S29_B1_106' },
+        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.A.1 — (Final Project Session - No new readings)', slot: 107, id: 'dl_ACT6_W15_S30_A1_107' },
+        { date: 'Tue, 12/02', reading: 'ACT6.W15.S30.B.1 — (Final Project Session - No new readings)', slot: 108, id: 'dl_ACT6_W15_S30_B1_108' }
       ]
     };
 
@@ -1238,7 +1506,7 @@
         actDetails.appendChild(actSummary);
 
         const actContent = document.createElement('div');
-        actContent.style.padding = '0 12px 12px'; // Match details-content padding
+        // actContent.style.padding = '0 12px 12px'; // Match details-content padding - removed, handled by global styles
         actContent.innerHTML = `
           <p class="meta" style="margin-top:10px;">Stakes: ${cleanHtml(actGroup.stakes)}</p>
           <p class="meta">Core Idea: ${cleanHtml(actGroup.core)}</p>
@@ -1259,7 +1527,7 @@
           weekDetails.appendChild(weekSummary);
 
           const weekContent = document.createElement('div');
-          weekContent.style.padding = '0 12px 12px'; // Match details-content padding
+          // weekContent.style.padding = '0 12px 12px'; // Match details-content padding - removed, handled by global styles
           weekContent.innerHTML = `
             <p class="meta" style="margin-top:10px;">Focus: ${cleanHtml(weekItem.focus)}</p>
             <p class="meta">Theme: ${cleanHtml(weekItem.theme)}</p>
@@ -1289,25 +1557,25 @@
                 sessionDetails.appendChild(sessionSummary);
 
                 const sessionInnerContent = document.createElement('div');
-                sessionInnerContent.style.padding = '0 12px 12px'; // Match details-content padding
+                // sessionInnerContent.style.padding = '0 12px 12px'; // Match details-content padding - removed, handled by global styles
                 sessionInnerContent.innerHTML = `
                   <p class="meta" style="margin-top:10px;"><strong>Core:</strong> ${cleanHtml(sessionItem.core)}</p>
                   <p class="meta"><strong>Key Question:</strong> ${cleanHtml(sessionItem.question)}</p>
                   <p class="meta"><strong>Prompt:</strong> ${cleanHtml(sessionItem.prompt)}</p>
+                  ${sessionItem.guests ? `<p class="guest-line">Guest: ${sessionItem.guests.map(g => cleanHtml(g)).join(', ')}</p>` : ''}
+                  ${sessionItem.notes ? `<p class="meta"><em>Note: ${cleanHtml(sessionItem.notes)}</em></p>` : ''}
                   <div class="grid" style="grid-template-columns:1fr; margin-top:12px;">
                     ${sessionItem.readings.map(r => {
                       const dlItem = DATA.dl.find(d => d.date === sessionItem.date && d.reading.startsWith(r.id));
                       const dlBadge = dlItem ? `<span class="dl-initials-badge" data-dl-id="${dlItem.id}"></span>` : '';
                       const hasLink = r.link && r.link !== '#';
                       const sessionIdShort = `S${sessionItem._seq || 0}`;
-                      const ridSuffix = r.id; // e.g., A.1 or B.2
-                      const displayRid = `${sessionIdShort}.${ridSuffix}`;
+                      const ridSuffix = r.id.match(/\.A\.\d+[a-z]?|\.B\.\d+[a-z]?/)?.[0] || ''; // Extract just .A.1 or .B.2a
+                      const displayRid = `${sessionIdShort}${ridSuffix}`; // Compose display ID like S3.A.1
                       // Determine side using the composed ID (Sx.A.y) to be robust
                       let sideLetter = '';
-                      if (displayRid.includes('.A.')) sideLetter = 'A';
-                      else if (displayRid.includes('.B.')) sideLetter = 'B';
-                      else if ((r.id||'').match(/(^|\.)A(\.|$)/)) sideLetter = 'A';
-                      else if ((r.id||'').match(/(^|\.)B(\.|$)/)) sideLetter = 'B';
+                      if (r.id.includes('.A.') || (r.id||'').match(/(^|\.)A(\.|$)/)) sideLetter = 'A';
+                      else if (r.id.includes('.B.') || (r.id||'').match(/(^|\.)B(\.|$)/)) sideLetter = 'B';
                       const sideClass = sideLetter === 'A' ? 'side-a' : (sideLetter === 'B' ? 'side-b' : '');
                       const readerBtn = hasLink ? `<button class="icon-btn" title="Open in Reader" data-open-reader="1" data-url="${r.link}" data-title="${cleanHtml(r.label)}" data-rid="${displayRid}">⧉</button>` : '';
                       const sidePill = sideLetter ? `<span class="side-pill ${sideLetter.toLowerCase()}">${sideLetter}</span>` : '';
@@ -1505,10 +1773,16 @@
       const keys = Object.keys(localStorage).filter(k=> k.startsWith('notes:S'));
       if(keys.length===0){ $launcherRecents.textContent = 'Open readings to see them here.'; return; }
       const q = (filterText||'').toLowerCase();
-      const items = keys.slice(-10).reverse().map(k=> k.slice(6));
-      const filtered = q ? items.filter(txt=> txt.toLowerCase().includes(q)) : items;
+      const items = keys.map(k=> k.slice(6)); // Extract RIDs
+      const uniqueItems = Array.from(new Set(items)); // Ensure uniqueness
+      // Filter by query and then sort by last modified (approx) and take latest
+      const filtered = uniqueItems
+        .filter(txt => txt.toLowerCase().includes(q))
+        .sort((a,b) => (localStorage.getItem('notes:'+b) ? new Date(localStorage.getItem('notes:'+b).match(/@ (.*)$/)?.[1] || 0) : 0) - (localStorage.getItem('notes:'+a) ? new Date(localStorage.getItem('notes:'+a).match(/@ (.*)$/)?.[1] || 0) : 0))
+        .slice(0, 5); // Take top 5 recent
+
       if(filtered.length===0){ $launcherRecents.textContent = 'No matches.'; return; }
-      $launcherRecents.innerHTML = filtered.slice(0,5).map(rid=> `<div class="launcher-item" data-open-rid="${rid}">${rid}</div>`).join('');
+      $launcherRecents.innerHTML = filtered.map(rid=> `<div class="launcher-item" data-open-rid="${rid}">${rid}</div>`).join('');
     }
     refreshRecents();
 
@@ -1584,14 +1858,17 @@
       refreshRecents(q);
       // Matches from all readings on page
       if(q){
-        const anchors = Array.from(document.querySelectorAll('a[data-rid]'));
+        const anchors = Array.from(document.querySelectorAll('a[data-rid], button[data-open-reader][data-rid]'));
         const results = [];
         for(const a of anchors){
           const rid = a.getAttribute('data-rid')||'';
-          const label = (a.textContent||'').trim();
+          const label = (a.textContent||a.getAttribute('data-title')||'').trim();
           if(rid.toLowerCase().includes(q) || label.toLowerCase().includes(q)){
-            results.push({rid, label, url:a.getAttribute('href')});
-            if(results.length>=5) break;
+            // Only add if not already in results (avoid duplicates if same reading has multiple links)
+            if (!results.some(r => r.rid === rid)) {
+                results.push({rid, label, url:a.getAttribute('href') || a.getAttribute('data-url')});
+                if(results.length>=5) break;
+            }
           }
         }
         if(results.length){
@@ -1720,7 +1997,7 @@
 
         const notesEl = win.querySelector('textarea');
         // Seed notes key if missing so Recents shows immediately
-        if(localStorage.getItem(NOTES_KEY) === null){
+        if(localStorage.getItem(NOTES_KEY) === null || localStorage.getItem(NOTES_KEY) === ''){ // Check for empty string too
           localStorage.setItem(NOTES_KEY, notesEl.value || '');
           try{ refreshRecents(); }catch(_){/* launcher may not exist on other pages */}
         }
